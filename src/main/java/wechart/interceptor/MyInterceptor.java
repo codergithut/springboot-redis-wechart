@@ -19,7 +19,7 @@ import javax.servlet.http.HttpServletResponse;
 @Service
 public class MyInterceptor implements HandlerInterceptor {
 
-    Jedis jedis = new Jedis("192.168.50.210");
+    Jedis jedis = new Jedis("192.168.1.66");
 
     @Override
     public boolean preHandle(HttpServletRequest httpServletRequest, HttpServletResponse httpServletResponse, Object o) throws Exception {
@@ -27,29 +27,33 @@ public class MyInterceptor implements HandlerInterceptor {
         System.out.println(">>>MyInterceptor>>>>>>>在请求处理之前进行调用（Controller方法调用之前）");
         boolean flag = false;
         Cookie[] cookies = httpServletRequest.getCookies();
-        if (cookies == null || cookies.length == 0) {
-            httpServletResponse.sendRedirect("logininfo");
-        }
-        try {
-            for (Cookie cookie : cookies) {
-                if (cookie.getName().equals("wechart-cookie")) {
-                    if(cookie!=null && cookie.getValue()!=null) {
 
-                        flag = jedis.hexists("LOGININFO",cookie.getValue());
+        if(cookies != null && cookies.length != 0) {
+            try {
+                for (Cookie cookie : cookies) {
+                    if (cookie.getName().equals("wechart-cookie")) {
+                        if(cookie!=null && cookie.getValue()!=null) {
 
+                            flag = jedis.hexists("LOGININFO",cookie.getValue());
+
+                        }
                     }
                 }
-            }
 
-            if(!flag) {
-                httpServletResponse.sendRedirect("http://localhost:8080//logininfo");
-                return false;
+                if(!flag) {
+                    httpServletResponse.sendRedirect("http://localhost:8080//logininfo");
+                    return false;
+                }
+                return true;
+
+            } catch (Exception exp) {
+                throw exp;
             }
+        } else {
+            //httpServletResponse.sendRedirect("logininfo");
             return true;
-
-        } catch (Exception exp) {
-            throw exp;
         }
+
     }
 
     @Override

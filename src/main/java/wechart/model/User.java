@@ -15,6 +15,16 @@ public class User implements Serializable {
 
     private String password;
 
+    private String pinying;
+
+    public String getPinying() {
+        return pinying;
+    }
+
+    public void setPinying(String pinying) {
+        this.pinying = pinying;
+    }
+
     public String getBinding() {
         return binding;
     }
@@ -48,4 +58,6 @@ public class User implements Serializable {
     public void setPassword(String password) {
         this.password = password;
     }
+
+
 }

@@ -1,17 +1,21 @@
 package wechart.controller;
 
+import net.sourceforge.pinyin4j.format.exception.BadHanyuPinyinOutputFormatCombination;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.redis.core.HashOperations;
+import org.springframework.data.redis.core.SetOperations;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.RestController;
+import redis.clients.jedis.Jedis;
 import wechart.model.User;
 
 import wechart.service.impl.UserServiceImpl;
+import wechart.util.GetPingyin;
 import wechart.util.RandomUtils;
 import wechart.util.UUIDTool;
 
@@ -19,42 +23,60 @@ import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletResponse;
 import java.util.Random;
 
+import static wechart.util.RandomUtils.getNumberAsId;
+
 /**
  * @author <a href="mailto:Administrator@gtmap.cn">Administrator</a>
  * @version 1.0, 2017/8/4
  * @description
  */
 @RestController
+@RequestMapping(value = "/user")
 public class UserController {
 
     @Autowired
     HashOperations hashOperations;
 
     @Autowired
+    SetOperations setOperations;
+
+    @Autowired
     private UserServiceImpl service;
 
-    //添加
-    @RequestMapping(value = "/registuser", method = RequestMethod.GET)
+    //注册添加用户信息
+    @RequestMapping(value = "/register", method = RequestMethod.GET)
     @ResponseBody
-    public Object test() {
-        System.out.println("start.....");
+    public Object registUser() throws BadHanyuPinyinOutputFormatCombination {
+
+        String inviteCode = "00000000";
+
+        if(setOperations.isMember("INVITECODE", inviteCode)) {
+            setOperations.move("INVITECODE", inviteCode, "");
+        } else {
+            return null;
+        }
         User m = new User();
-        m.setRedisKey(UUIDTool.getUUID());
+        String userId = getNumberAsId(10);
+        while(setOperations.isMember("USERID", userId)) {
+            userId = getNumberAsId(10);
+        }
+        setOperations.add("USERID", userId);
+        m.setRedisKey(userId);
         m.setPassword("123");
         m.setUsername("陈龙");
+        m.setPinying(GetPingyin.getPingYin(m.getUsername()));
         m.setBinding("1731857742@qq.com");
         service.put(m.getRedisKey(), m, -1);
         hashOperations.put("BINDINGINFO", "1731857742@qq.com", m.getRedisKey());
-        hashOperations.put("USRNAMEINFO", m.getUsername(), m.getRedisKey());
         System.out.println("add success end...");
         return m;
     }
 
 
     /**
-     * 需要获取code
+     * 页面需要获取code，然后修改用户信息
      */
-    @RequestMapping(value = "/changeinfo", method = RequestMethod.GET)
+    @RequestMapping(value = "/change", method = RequestMethod.GET)
     @ResponseBody
     public void changeInfo() {
 
@@ -69,14 +91,15 @@ public class UserController {
         System.out.println("add success end...");
     }
 
-    @RequestMapping(value = "/logininfo", method = RequestMethod.GET)
+    //根据用户名进行用户信息验证
+    @RequestMapping(value = "/login", method = RequestMethod.GET)
     @ResponseBody
     public String loignInfo(HttpServletResponse response) {
         boolean flag = false;
 
-        String o = (String)hashOperations.get("USRNAMEINFO", "陈龙");
+        String key = "";
 
-        User m = service.get(o);
+        User m = service.get(key);
         String token = UUIDTool.getUUID();
 
         if(m.getUsername().equals("陈龙") && m.getPassword().equals("123")) {
@@ -99,7 +122,8 @@ public class UserController {
     @Value("${spring.mail.username}")
     private String username;
 
-    @RequestMapping(value = "/getmail", method = RequestMethod.GET)
+    //根据用户信息发送消息到用户邮箱，用户提供邮箱信息
+    @RequestMapping(value = "/sendMailInfo", method = RequestMethod.GET)
     @ResponseBody
     public String getMail(HttpServletResponse response) {
 
@@ -124,5 +148,35 @@ public class UserController {
     }
 
 
+    //用户发送邀请码
+    @RequestMapping(value = "/sendInviteCode", method = RequestMethod.GET)
+    @ResponseBody
+    public String getInviteCode(HttpServletResponse response) {
+
+        String inviteCode = RandomUtils.randomUtil();
+
+        String initor = "1731857742@qq.com";
+
+        String user = "1468195034@qq.com";
+
+        SimpleMailMessage simpleMailMessage = new SimpleMailMessage();
+        simpleMailMessage.setFrom(username);
+        simpleMailMessage.setTo("1731857742@qq.com");//接收邮件的邮箱
+        simpleMailMessage.setSubject("微聊密码邀请码已发送");
+        simpleMailMessage.setText("尊敬的用户你好，你已将邀请码发送到邮箱:" + user
+                + "邀请码码如下: " + inviteCode);
+
+        simpleMailMessage.setFrom(username);
+        simpleMailMessage.setTo("1468195034@qq.com");//接收邮件的邮箱
+        simpleMailMessage.setSubject("你已收到邀请码");
+        simpleMailMessage.setText("尊敬的用户你好，已收到:" + initor
+                + " 发出的邀请码，邀请码码如下: " + inviteCode);
+
+        setOperations.add("INVITECODE", inviteCode);
+
+        System.out.println(inviteCode);
+
+        return "hahahaha";
+    }
 
 }

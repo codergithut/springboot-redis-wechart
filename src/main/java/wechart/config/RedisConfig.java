@@ -38,7 +38,8 @@ public class RedisConfig {
     @Bean
     public RedisConnectionFactory getRedisConnectionFactory() {
         JedisConnectionFactory redisFactory = new JedisConnectionFactory();
-        redisFactory.setHostName("192.168.50.210");
+        redisFactory.setHostName("192.168.1.66");
+        redisFactory.setTimeout(1000000);
         return redisFactory;
     }
 

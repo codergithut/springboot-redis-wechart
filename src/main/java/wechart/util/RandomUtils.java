@@ -19,4 +19,9 @@ public class RandomUtils {
         }
         return code;
     }
+
+    public static String getNumberAsId(long rang) {
+        return Math.round(Math.random()*Math.pow(10, rang))+"";
+    }
+
 }
