@@ -184,11 +184,20 @@ public class MyWebSocket implements CommonValue {
 
 
     public void sendUserInfo(JSONObject jsStr) throws IOException {
+        /**
+         * 如果用户在线，发送消息到用户，并记录到mongodb如果用户不在线，记录到redis，当用户上线推送数据并记录到mngodb数据库中
+         */
         String toid = jsStr.get("otherId").toString();
+        boolean flag = false;
         for(MyWebSocket item : webSocketSet) {
             if(item.getUserid() != null && item.getUserid().equals(toid)) {
                 item.sendMessage(jsStr.toJSONString());
+                flag = true;
             }
+        }
+
+        if(!flag) {
+            //todo 记录消息
         }
     }
 
