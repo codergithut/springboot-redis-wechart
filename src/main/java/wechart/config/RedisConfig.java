@@ -1,6 +1,7 @@
 package wechart.config;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.data.redis.connection.RedisConnectionFactory;
@@ -8,6 +9,7 @@ import org.springframework.data.redis.connection.jedis.JedisConnectionFactory;
 import org.springframework.data.redis.core.*;
 import org.springframework.data.redis.serializer.JdkSerializationRedisSerializer;
 import org.springframework.data.redis.serializer.StringRedisSerializer;
+import redis.clients.jedis.Jedis;
 
 /**
  * @author <a href="mailto:Administrator@gtmap.cn">Administrator</a>
@@ -15,7 +17,11 @@ import org.springframework.data.redis.serializer.StringRedisSerializer;
  * @description
  */
 @Configuration
-public class RedisConfig {
+public class RedisConfig implements CommonValue{
+
+    @Value("${custom.redis.host}")
+    String host;
+
     /**
      * 注入 RedisConnectionFactory
      */
@@ -34,14 +40,20 @@ public class RedisConfig {
         return redisTemplate;
     }
 
-
     @Bean
     public RedisConnectionFactory getRedisConnectionFactory() {
         JedisConnectionFactory redisFactory = new JedisConnectionFactory();
-        redisFactory.setHostName("192.168.1.66");
+        redisFactory.setHostName(host);
         redisFactory.setTimeout(1000000);
         return redisFactory;
     }
+
+    @Bean(JEDIS)
+    public Jedis getJedis() {
+        return new Jedis(host);
+    }
+
+
 
     /**
      * 设置数据存入 redis 的序列化方式

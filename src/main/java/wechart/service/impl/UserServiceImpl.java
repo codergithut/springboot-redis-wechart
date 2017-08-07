@@ -9,7 +9,7 @@ import wechart.service.IHsahRedisService;
  * @version 1.0, 2017/8/4
  * @description
  */
-@Service
+@Service(value = "userServiceImpl")
 public class UserServiceImpl extends IHsahRedisService<User> {
 
     private static final String REDIS_KEY = "USRINFO";

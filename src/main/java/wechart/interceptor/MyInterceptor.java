@@ -41,7 +41,7 @@ public class MyInterceptor implements HandlerInterceptor {
                 }
 
                 if(!flag) {
-                    httpServletResponse.sendRedirect("http://localhost:8080//logininfo");
+                    httpServletResponse.sendRedirect("http://localhost:8080/logininfo");
                     return false;
                 }
                 return true;

@@ -1,12 +1,12 @@
-package wechart.mongodb.controller;
+package mongodb.controller;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
-import wechart.mongodb.model.User;
-import wechart.mongodb.service.UserService;
+import mongodb.model.User;
+import mongodb.service.UserService;
 
 import java.util.List;
 

@@ -1,4 +1,4 @@
-package wechart.mongodb.model;
+package mongodb.model;
 
 import org.springframework.data.annotation.Id;
 

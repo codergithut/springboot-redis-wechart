@@ -11,7 +11,9 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.RestController;
+import redis.clients.jedis.Commands;
 import redis.clients.jedis.Jedis;
+import wechart.config.CommonValue;
 import wechart.model.User;
 
 import wechart.service.impl.UserServiceImpl;
@@ -32,7 +34,7 @@ import static wechart.util.RandomUtils.getNumberAsId;
  */
 @RestController
 @RequestMapping(value = "/user")
-public class UserController {
+public class UserController implements CommonValue{
 
     @Autowired
     HashOperations hashOperations;
@@ -50,8 +52,8 @@ public class UserController {
 
         String inviteCode = "00000000";
 
-        if(setOperations.isMember("INVITECODE", inviteCode)) {
-            setOperations.move("INVITECODE", inviteCode, "");
+        if(setOperations.isMember(INVITECODE, inviteCode)) {
+            setOperations.move(INVITECODE, inviteCode, "");
         } else {
             return null;
         }
@@ -67,7 +69,7 @@ public class UserController {
         m.setPinying(GetPingyin.getPingYin(m.getUsername()));
         m.setBinding("1731857742@qq.com");
         service.put(m.getRedisKey(), m, -1);
-        hashOperations.put("BINDINGINFO", "1731857742@qq.com", m.getRedisKey());
+        hashOperations.put(BINDINGINFO, "1731857742@qq.com", m.getRedisKey());
         System.out.println("add success end...");
         return m;
     }
@@ -83,7 +85,7 @@ public class UserController {
         //根据邮箱获取的验证码，前端获取
         String code = "34567FSX";
 
-        String changeId = (String)hashOperations.get("RESETUSERINFO", code);
+        String changeId = (String)hashOperations.get(RESETUSERINFO, code);
 
         User m = service.get(changeId);
         m.setPassword("tianjian");
@@ -103,17 +105,16 @@ public class UserController {
         String token = UUIDTool.getUUID();
 
         if(m.getUsername().equals("陈龙") && m.getPassword().equals("123")) {
-            hashOperations.put("LOGININFO", token, m.getRedisKey());
-            Cookie cookie = new Cookie("wechart-cookie", token);
+            hashOperations.put(LOGININFO, token, m.getRedisKey());
+            Cookie cookie = new Cookie(COOK_NAME, token);
             response.addCookie(cookie);
             flag = true;
         }
-
         if(!flag) {
             //验证错误的提示
         }
 
-        return "hahahaha";
+        return token;
     }
 
     @Autowired
@@ -127,7 +128,7 @@ public class UserController {
     @ResponseBody
     public String getMail(HttpServletResponse response) {
 
-        String changeId = (String)hashOperations.get("BINDINGINFO", "1731857742@qq.com");
+        String changeId = (String)hashOperations.get(BINDINGINFO, "1731857742@qq.com");
 
         User m = service.get(changeId);
 
@@ -140,7 +141,7 @@ public class UserController {
         simpleMailMessage.setText("尊敬的用户你好，你现在正在尝试重置用户名为:" + m.getUsername()
                 + "的密码！" + "验证码如下: " + code);
 
-        hashOperations.put("RESETUSERINFO", code, m.getRedisKey());
+        hashOperations.put(RESETUSERINFO, code, m.getRedisKey());
 
         mailSender.send(simpleMailMessage);
 
@@ -172,7 +173,7 @@ public class UserController {
         simpleMailMessage.setText("尊敬的用户你好，已收到:" + initor
                 + " 发出的邀请码，邀请码码如下: " + inviteCode);
 
-        setOperations.add("INVITECODE", inviteCode);
+        setOperations.add(INVITECODE, inviteCode);
 
         System.out.println(inviteCode);
 

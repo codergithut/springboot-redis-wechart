@@ -1,7 +1,7 @@
-package wechart.mongodb.repository;
+package mongodb.repository;
 
 import org.springframework.data.mongodb.repository.MongoRepository;
-import wechart.mongodb.model.User;
+import mongodb.model.User;
 
 /**
  * Created by tianjian on 2017/8/6.
