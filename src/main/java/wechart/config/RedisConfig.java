@@ -10,6 +10,7 @@ import org.springframework.data.redis.core.*;
 import org.springframework.data.redis.serializer.JdkSerializationRedisSerializer;
 import org.springframework.data.redis.serializer.StringRedisSerializer;
 import redis.clients.jedis.Jedis;
+import wechart.interceptor.MyInterceptor;
 
 /**
  * @author <a href="mailto:Administrator@gtmap.cn">Administrator</a>
@@ -38,6 +39,13 @@ public class RedisConfig implements CommonValue{
         RedisTemplate<String, Object> redisTemplate = new RedisTemplate<String, Object>();
         initDomainRedisTemplate(redisTemplate, redisConnectionFactory);
         return redisTemplate;
+    }
+
+    @Bean
+    public MyInterceptor getMyInterceptor() {
+        MyInterceptor myInterceptor = new MyInterceptor();
+        myInterceptor.setRead(getJedis());
+        return myInterceptor;
     }
 
     @Bean
