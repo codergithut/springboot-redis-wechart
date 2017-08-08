@@ -1,11 +1,14 @@
 package wechart.interceptor;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.data.redis.core.HashOperations;
 import org.springframework.stereotype.Service;
 import org.springframework.web.servlet.HandlerInterceptor;
 import org.springframework.web.servlet.ModelAndView;
 import redis.clients.jedis.Jedis;
+import wechart.config.CommonValue;
+import wechart.util.BeanUtils;
 
 import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletRequest;
@@ -16,14 +19,17 @@ import javax.servlet.http.HttpServletResponse;
  * @version 1.0, 2017/8/4
  * @description
  */
-@Service
-public class MyInterceptor implements HandlerInterceptor {
 
-    Jedis jedis = new Jedis("192.168.1.66");
+public class MyInterceptor implements HandlerInterceptor, CommonValue {
+
+    public void setRead(Jedis read) {
+        this.read = read;
+    }
+
+    private Jedis read;
 
     @Override
     public boolean preHandle(HttpServletRequest httpServletRequest, HttpServletResponse httpServletResponse, Object o) throws Exception {
-
         System.out.println(">>>MyInterceptor>>>>>>>在请求处理之前进行调用（Controller方法调用之前）");
         boolean flag = false;
         Cookie[] cookies = httpServletRequest.getCookies();
@@ -31,17 +37,17 @@ public class MyInterceptor implements HandlerInterceptor {
         if(cookies != null && cookies.length != 0) {
             try {
                 for (Cookie cookie : cookies) {
-                    if (cookie.getName().equals("wechart-cookie")) {
+                    if (cookie.getName().equals(COOK_NAME)) {
                         if(cookie!=null && cookie.getValue()!=null) {
 
-                            flag = jedis.hexists("LOGININFO",cookie.getValue());
+                            flag = read.hexists(LOGININFO,cookie.getValue());
 
                         }
                     }
                 }
 
                 if(!flag) {
-                    httpServletResponse.sendRedirect("http://localhost:8080/logininfo");
+                    httpServletResponse.sendRedirect(LOGIN_URL);
                     return false;
                 }
                 return true;
