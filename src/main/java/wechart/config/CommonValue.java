@@ -28,4 +28,8 @@ public interface CommonValue {
     static final String PRFIX_REGISTER="register";
 
     static final String USRINFO = "USRINFO";
+
+    static final String WAITERECEIVEMESSAGE = "WAITERECEIVEMESSAGE";
+
+    static final String HISTORYCONTENT = "HISTORYCONTENT";
 }

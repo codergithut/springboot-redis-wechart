@@ -6,8 +6,10 @@ import org.springframework.context.annotation.ComponentScan;
 import redis.clients.jedis.Jedis;
 import wechart.config.CommonValue;
 import wechart.model.User;
+import wechart.model.WebSocketMessage;
 import wechart.service.impl.UserServiceImpl;
 import wechart.util.BeanUtils;
+import wechart.util.StringSort;
 
 import javax.websocket.OnClose;
 import javax.websocket.OnMessage;
@@ -42,7 +44,7 @@ public class MyWebSocket implements CommonValue {
 
     private String userid;
 
-    Jedis jedis = BeanUtils.getBean(JEDIS);
+    Jedis write = BeanUtils.getBean(JEDIS);
 
     UserServiceImpl userServiceImpl = BeanUtils.getBean("userServiceImpl");
 
@@ -55,7 +57,7 @@ public class MyWebSocket implements CommonValue {
 
         String token = session.getRequestParameterMap().get(TOKEN).toString();
         String id = null;
-        List<String> val = jedis.hmget(LOGININFO, token);
+        List<String> val = write.hmget(LOGININFO, token);
         if(val != null && val.size() == 1) {
             id = val.get(0);
         }
@@ -67,7 +69,7 @@ public class MyWebSocket implements CommonValue {
             webSocketSet.add(this);
             System.out.println("有新连接加入！当前在线人数为" + getOnlineCount());
             try {
-                Set<String> friends = jedis.smembers(userid);
+                Set<String> friends = write.smembers(userid);
                 Map<String,Object> friendsData = new HashMap<String,Object>();
                 friendsData.put("type", "friendsinfo");
                 friendsData.put("Data", friends);
@@ -76,8 +78,27 @@ public class MyWebSocket implements CommonValue {
                 Map<String,Object> userData = new HashMap<String,Object>();
                 userData.put("type", "userinfo");
                 userData.put("Data", user);
+                /**
+                 * 返回好友信息
+                 */
                 sendMessage(JSON.toJSONString(friendsData));
+
+                /**
+                 * 返回用户信息
+                 */
                 sendMessage(JSON.toJSONString(userData));
+
+                //获取离线消息
+                Set<String> allinfo = write.smembers(WAITERECEIVEMESSAGE + userid);
+                write.srem(WAITERECEIVEMESSAGE + userid);
+
+                for(String s : allinfo) {
+                    WebSocketMessage message = JSON.parseObject(s, WebSocketMessage.class);
+                    /**
+                     * 先将文件存放到redis中
+                     */
+                    saveHistoryContent(s, message.getReceivedId());
+                }
             } catch (IOException e) {
                 System.out.println("IO异常");
             }
@@ -110,6 +131,16 @@ public class MyWebSocket implements CommonValue {
     @OnMessage
     public void onMessage(String recMessage, Session session) throws IOException {
         //todo message需要给我特定的说明比如 添加好友addfriend@+消息体 聊天就是talk@+消息体 群聊天就是allTalk@+消息体  等等
+
+        WebSocketMessage message = JSON.parseObject(recMessage, WebSocketMessage.class);
+
+        if(message.getType().equals("TALK")) {
+            sendUserInfo(message);
+        }
+
+
+
+
         JSONObject jsStr = JSONObject.parseObject(recMessage);
         String type = jsStr.get("type").toString();
         if(type.equals("talk")) {
@@ -128,8 +159,37 @@ public class MyWebSocket implements CommonValue {
 
         }
 
-
     }
+
+    private void sendUserInfo(WebSocketMessage message) throws IOException {
+
+        boolean flag = false;
+
+        String messageInfo = JSON.toJSONString(message);
+
+        for(MyWebSocket item : webSocketSet) {
+            if(item.getUserid() != null && item.getUserid().equals(message.getReceivedId())) {
+                item.sendMessage(messageInfo);
+                flag = true;
+                saveHistoryContent(messageInfo, message.getReceivedId());
+
+            }
+        }
+
+        if(!flag) {
+            write.sadd(WAITERECEIVEMESSAGE + message.getReceivedId(), messageInfo);
+        }
+    }
+
+
+    private void saveHistoryContent(String message, String receivedId) {
+        String talkKey = StringSort.getKeyBySort(new String[]{userid, receivedId});
+        if(!write.sismember(HISTORYCONTENT, talkKey)){
+            write.sadd(HISTORYCONTENT, talkKey);
+        }
+        write.sadd(talkKey, message);
+    }
+
 
     private void sendResultFrendRequest(JSONObject jsStr) throws IOException {
         String toid = jsStr.get("account").toString();
@@ -137,13 +197,13 @@ public class MyWebSocket implements CommonValue {
         String id = jsStr.get("id").toString();
         if(result.equals("agree")) {
 
-            jedis.sadd(userid, toid);
-            jedis.sadd(toid, userid);
+            write.sadd(userid, toid);
+            write.sadd(toid, userid);
 
             for(MyWebSocket item : webSocketSet) {
                 if(item.getUserid() != null && item.getUserid().equals(toid)) {
 
-                    Set<String> friends = jedis.smembers(toid);
+                    Set<String> friends = write.smembers(toid);
                     Map<String,Object> friendsData = new HashMap<String,Object>();
                     friendsData.put("type", "friendsinfo");
                     friendsData.put("Data", friends);
@@ -158,7 +218,7 @@ public class MyWebSocket implements CommonValue {
 
             for(MyWebSocket item : webSocketSet) {
                 if(item.getUserid() != null && item.getUserid().equals(id)) {
-                    Set<String> friends = jedis.smembers(id);
+                    Set<String> friends = write.smembers(id);
                     Map<String,Object> friendsData = new HashMap<String,Object>();
                     friendsData.put("type", "friendsinfo");
                     friendsData.put("Data", friends);
