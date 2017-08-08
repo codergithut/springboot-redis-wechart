@@ -1,6 +1,7 @@
 package wechart.service.impl;
 
 import org.springframework.stereotype.Service;
+import wechart.config.CommonValue;
 import wechart.model.User;
 import wechart.service.IHsahRedisService;
 
@@ -10,9 +11,9 @@ import wechart.service.IHsahRedisService;
  * @description
  */
 @Service(value = "userServiceImpl")
-public class UserServiceImpl extends IHsahRedisService<User> {
+public class UserServiceImpl extends IHsahRedisService<User> implements CommonValue{
 
-    private static final String REDIS_KEY = "USRINFO";
+    private static final String REDIS_KEY = USRINFO;
 
     @Override
     protected String getRedisKey() {
