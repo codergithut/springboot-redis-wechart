@@ -4,6 +4,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 import wechart.model.RedisModel;
 import wechart.service.impl.RedisServiceImpl;
@@ -21,7 +22,13 @@ public class TestController {
     //添加
     @RequestMapping(value = "/add", method = RequestMethod.GET)
     @ResponseBody
-    public void test() {
+    public void test(@RequestParam("name") String name) {
+
+        System.out.println("获取Name属性为：" + name);
+
+//        response.setHeader("Access-Control-Allow-Origin", "*");
+//        response.setContentType("*");
+
         System.out.println("start.....");
         RedisModel m = new RedisModel();
         m.setName("张三");
