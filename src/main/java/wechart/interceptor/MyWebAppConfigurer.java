@@ -21,7 +21,7 @@ public class MyWebAppConfigurer extends WebMvcConfigurerAdapter implements Commo
 
     @Override
     public void addInterceptors(InterceptorRegistry registry) {
-        registry.addInterceptor(redisConfig.getMyInterceptor()).addPathPatterns("/**").excludePathPatterns("//" + PRFIX_LOGIN,"//" + PRFIX_REGISTER);
+        registry.addInterceptor(redisConfig.getMyInterceptor()).addPathPatterns("/**").excludePathPatterns("//" + PRFIX_LOGIN,"//" + PRFIX_REGISTER,"/save");
         super.addInterceptors(registry);
     }
 

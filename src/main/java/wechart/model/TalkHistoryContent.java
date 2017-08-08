@@ -16,7 +16,7 @@ public class TalkHistoryContent {
 
     private String key;
 
-    private List<String> members;
+    private String[] members;
 
     private List<String> contents;
 
@@ -36,11 +36,11 @@ public class TalkHistoryContent {
         this.key = key;
     }
 
-    public List<String> getMembers() {
+    public String[] getMembers() {
         return members;
     }
 
-    public void setMembers(List<String> members) {
+    public void setMembers(String[] members) {
         this.members = members;
     }
 

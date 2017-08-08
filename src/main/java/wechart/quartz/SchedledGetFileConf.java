@@ -21,7 +21,12 @@ public class SchedledGetFileConf {
     @Autowired
     ScheduledGetFileTasks scheduledTasks;
 
-    private String cronTime = "0/2 * * * * ?";
+    /**
+     * 系统时间23：50：00 开始执行文件备份任务
+     *
+     * http://blog.csdn.net/xufaxi/article/details/11805639 更多时间设置
+     */
+    private String cronTime = "0 50 23 * * ?";
     // 配置中设定了
     // ① targetMethod: 指定需要定时执行scheduleInfoAction中的simpleJobTest()方法
     // ② concurrent：对于相同的JobDetail，当指定多个Trigger时, 很可能第一个job完成之前，

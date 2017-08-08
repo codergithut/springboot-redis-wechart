@@ -37,27 +37,7 @@ public class MongodbController {
      * @return
      */
     @GetMapping("/save")
-    public TalkHistoryContent save() {
-
-        TalkHistoryContent talkHistoryContent = new TalkHistoryContent();
-
-        List<String> members = new ArrayList<String>();
-
-        List<String> contents = new ArrayList<String>();
-
-        members.add("1");
-
-        members.add("2");
-
-        contents.add("test");
-
-        contents.add("haha");
-
-        talkHistoryContent.setKey("test");
-        talkHistoryContent.setContents(contents);
-        talkHistoryContent.setMembers(members);
-
-
+    public List<TalkHistoryContent> save() {
 
         IndexOperations io = mongoTemplate.indexOps("talkHistoryContent");
 
@@ -67,14 +47,47 @@ public class MongodbController {
 
         io.ensureIndex(index);
 
-        mongoTemplate.save(talkHistoryContent);
+        List<TalkHistoryContent> talkHistoryContents = getTalkHistoryContent();
 
         //也可以使用Repository插入数据，userService.save(user);
-        return talkHistoryContent;
+        return talkHistoryContents;
+    }
+
+    private List<TalkHistoryContent> getTalkHistoryContent() {
+        int i = 0;
+        List<TalkHistoryContent> talkHistoryContents = new ArrayList<TalkHistoryContent>();
+
+        while(i < 10) {
+            TalkHistoryContent talkHistoryContent = new TalkHistoryContent();
+
+            String[] members = new String[]{i + "", (i + 1) +""};
+
+            List<String> contents = new ArrayList<String>();
+
+
+            contents.add("test");
+
+            contents.add("haha");
+
+            talkHistoryContent.setKey("test");
+            talkHistoryContent.setContents(contents);
+            talkHistoryContent.setMembers(members);
+
+            talkHistoryContents.add(talkHistoryContent);
+
+            mongoTemplate.save(talkHistoryContent);
+
+            i++;
+        }
+
+        return talkHistoryContents;
+
+
+
     }
 
     @GetMapping("/find")
-    public List<User> find() {
+    public Object find() {
         Query query = new Query();
 
         Criteria criteria =new Criteria();
@@ -87,14 +100,7 @@ public class MongodbController {
         for(TalkHistoryContent s : list) {
             System.out.println(s.toString());
         }
-
-//        mongoTemplate.
-//        List<User> userList = mongoTemplate.findAll(User.class);
-//        return userList;
-
-
-
-        return null;
+        return list;
     }
 
 }
