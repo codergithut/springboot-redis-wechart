@@ -145,7 +145,7 @@ public class MyWebSocket implements CommonValue {
 
         jedisPubSubListener.setJedis(sub);
 
-        jedisPubSubListener.listen();
+//        jedisPubSubListener.listen();
 
         System.out.println("ashdfalsdfha");
 

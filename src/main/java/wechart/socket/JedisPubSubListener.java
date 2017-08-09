@@ -14,7 +14,6 @@ import java.io.IOException;
  * @description
  */
 @Service
-@Scope("prototype")
 public class JedisPubSubListener extends JedisPubSub {
 
     MyWebSocket myWebSocket;

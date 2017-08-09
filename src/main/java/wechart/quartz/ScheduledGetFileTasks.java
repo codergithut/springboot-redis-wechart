@@ -12,6 +12,8 @@ import org.springframework.stereotype.Component;
 import redis.clients.jedis.Jedis;
 import wechart.config.CommonValue;
 import wechart.model.TalkHistoryContent;
+import wechart.socket.JedisPubSubListener;
+import wechart.util.BeanUtils;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -36,30 +38,33 @@ public class ScheduledGetFileTasks implements CommonValue{
 
     public void saveHistoryContent() throws Exception {
 
-        IndexOperations io = mongoTemplate.indexOps("talkHistoryContent");
+//        IndexOperations io = mongoTemplate.indexOps("talkHistoryContent");
+//
+//        Index index = new Index();
+//
+//        index.on("members", Order.ASCENDING); //为name属性加上 索引
+//
+//        io.ensureIndex(index);
+//
+//        Set<String> keys = read.smembers(HISTORYCONTENT);
+//
+//        for(String key : keys) {
+//            Set<String> contents = read.smembers(key);
+//            String[] members = key.split("_");
+//            TalkHistoryContent talkHistoryContent = new TalkHistoryContent();
+//            talkHistoryContent.setMembers(members);
+//            List<String> files = new ArrayList<String>();
+//
+//            for(String content : contents) {
+//                files.add(content);
+//            }
+//
+//            mongoTemplate.save(talkHistoryContent);
+//        }
+        JedisPubSubListener jedisPubSubListener = BeanUtils.getBean("jedisPubSubListener");
 
-        Index index = new Index();
+        jedisPubSubListener.listen();
 
-        index.on("members", Order.ASCENDING); //为name属性加上 索引
-
-        io.ensureIndex(index);
-
-        Set<String> keys = read.smembers(HISTORYCONTENT);
-
-        for(String key : keys) {
-            Set<String> contents = read.smembers(key);
-            String[] members = key.split("_");
-            TalkHistoryContent talkHistoryContent = new TalkHistoryContent();
-            talkHistoryContent.setMembers(members);
-            List<String> files = new ArrayList<String>();
-
-            for(String content : contents) {
-                files.add(content);
-            }
-
-            mongoTemplate.save(talkHistoryContent);
-
-        }
 
     }
 
