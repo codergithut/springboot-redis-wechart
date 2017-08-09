@@ -1,5 +1,7 @@
 package wechart.socket;
 
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Scope;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
@@ -20,26 +22,30 @@ public class JedisPubSubListener extends JedisPubSub {
 
     MyWebSocket myWebSocket;
 
+    boolean flag = true;
+
+    public boolean isFlag() {
+        return flag;
+    }
+
+    public void setFlag(boolean flag) {
+        this.flag = flag;
+    }
+
+    @Autowired
+    @Qualifier("SUBJEDIS")
+    Jedis jedis;
+
     List<JedisPubSubListener> listeners = new ArrayList<JedisPubSubListener>();
-
-    public Jedis getJedis() {
-        return jedis;
-    }
-
-    public void setJedis(Jedis jedis) {
-        this.jedis = jedis;
-    }
 
     public void add(JedisPubSubListener jedisPubSubListener) {
         listeners.add(jedisPubSubListener);
     }
 
-    Jedis jedis;
 
     @Override
     public void onMessage(String channel, String message ) {
         try {
-
             System.out.println("hahahah");
             myWebSocket.sendMessage(message);
         } catch (IOException e) {
@@ -65,6 +71,12 @@ public class JedisPubSubListener extends JedisPubSub {
 
     @Async("taskExecutor")
     public void listen() {
-        jedis.subscribe(this, myWebSocket.getId());
+        for(JedisPubSubListener listener : listeners) {
+            if(listener.isFlag()) {
+                jedis.subscribe(this, myWebSocket.getId());
+            }
+            listener.setFlag(false);
+        }
+
     }
 }

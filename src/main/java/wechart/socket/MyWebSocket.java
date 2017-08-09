@@ -55,8 +55,6 @@ public class MyWebSocket implements CommonValue {
 
     HashOperations hashOperations;
 
-    JedisPubSubListener jedisPubSubListener;
-
     Locked locked;
 
     Jedis read;
@@ -69,8 +67,6 @@ public class MyWebSocket implements CommonValue {
         hashOperations = BeanUtils.getBean("hashOperations");
 
         userServiceImpl = BeanUtils.getBean("userServiceImpl");
-
-        jedisPubSubListener = BeanUtils.getBean("jedisPubSubListener");
 
         read = BeanUtils.getBean(JEDIS);
 
@@ -146,10 +142,9 @@ public class MyWebSocket implements CommonValue {
          * 订阅会歇逼 需要异步处理
          *
          */
+        JedisPubSubListener jedisPubSubListener = BeanUtils.getBean("jedisPubSubListener");
 
         jedisPubSubListener.setMyWebSocket(this);
-
-        jedisPubSubListener.setJedis(sub);
 
         jedisPubSubListener.add(jedisPubSubListener);
 
