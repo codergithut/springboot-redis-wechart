@@ -7,6 +7,8 @@ import redis.clients.jedis.Jedis;
 import redis.clients.jedis.JedisPubSub;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * @author <a href="mailto:Administrator@gtmap.cn">Administrator</a>
@@ -18,12 +20,18 @@ public class JedisPubSubListener extends JedisPubSub {
 
     MyWebSocket myWebSocket;
 
+    List<JedisPubSubListener> listeners = new ArrayList<JedisPubSubListener>();
+
     public Jedis getJedis() {
         return jedis;
     }
 
     public void setJedis(Jedis jedis) {
         this.jedis = jedis;
+    }
+
+    public void add(JedisPubSubListener jedisPubSubListener) {
+        listeners.add(jedisPubSubListener);
     }
 
     Jedis jedis;
@@ -39,7 +47,13 @@ public class JedisPubSubListener extends JedisPubSub {
         }
     }
 
+    public List<JedisPubSubListener> getListeners() {
+        return listeners;
+    }
 
+    public void setListeners(List<JedisPubSubListener> listeners) {
+        this.listeners = listeners;
+    }
 
     public MyWebSocket getMyWebSocket() {
         return myWebSocket;

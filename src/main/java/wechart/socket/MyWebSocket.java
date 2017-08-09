@@ -11,6 +11,7 @@ import redis.clients.jedis.JedisPubSub;
 import wechart.config.CommonValue;
 import wechart.model.User;
 import wechart.model.WebSocketMessage;
+import wechart.server.Locked;
 import wechart.service.impl.UserServiceImpl;
 import wechart.util.BeanUtils;
 import wechart.util.StringSort;
@@ -56,6 +57,8 @@ public class MyWebSocket implements CommonValue {
 
     JedisPubSubListener jedisPubSubListener;
 
+    Locked locked;
+
     Jedis read;
 
     Jedis sub;
@@ -72,6 +75,8 @@ public class MyWebSocket implements CommonValue {
         read = BeanUtils.getBean(JEDIS);
 
         sub = BeanUtils.getBean(SUBJEDIS);
+
+        locked = BeanUtils.getBean("locked");
     }
 
 
@@ -141,13 +146,15 @@ public class MyWebSocket implements CommonValue {
          * 订阅会歇逼 需要异步处理
          *
          */
+
         jedisPubSubListener.setMyWebSocket(this);
 
         jedisPubSubListener.setJedis(sub);
 
-//        jedisPubSubListener.listen();
+        jedisPubSubListener.add(jedisPubSubListener);
 
-        System.out.println("ashdfalsdfha");
+        locked.setLocked(true);
+
 
     }
 

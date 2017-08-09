@@ -61,9 +61,9 @@ public class ScheduledGetFileTasks implements CommonValue{
 //
 //            mongoTemplate.save(talkHistoryContent);
 //        }
-        JedisPubSubListener jedisPubSubListener = BeanUtils.getBean("jedisPubSubListener");
-
-        jedisPubSubListener.listen();
+//        JedisPubSubListener jedisPubSubListener = BeanUtils.getBean("jedisPubSubListener");
+//
+//        jedisPubSubListener.listen();
 
 
     }
