@@ -9,8 +9,11 @@ import org.springframework.data.redis.connection.jedis.JedisConnectionFactory;
 import org.springframework.data.redis.core.*;
 import org.springframework.data.redis.serializer.JdkSerializationRedisSerializer;
 import org.springframework.data.redis.serializer.StringRedisSerializer;
+import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import redis.clients.jedis.Jedis;
 import wechart.interceptor.MyInterceptor;
+
+import java.util.concurrent.ThreadPoolExecutor;
 
 /**
  * @author <a href="mailto:Administrator@gtmap.cn">Administrator</a>
@@ -44,7 +47,7 @@ public class RedisConfig implements CommonValue{
     @Bean
     public MyInterceptor getMyInterceptor() {
         MyInterceptor myInterceptor = new MyInterceptor();
-        myInterceptor.setRead(getJedis());
+        myInterceptor.setRead(getCommonJedis());
         return myInterceptor;
     }
 
@@ -56,9 +59,36 @@ public class RedisConfig implements CommonValue{
         return redisFactory;
     }
 
-    @Bean(JEDIS)
-    public Jedis getJedis() {
+    @Bean(SUBJEDIS)
+    public Jedis getSubJedis() {
         return new Jedis(host);
+    }
+
+    @Bean(COMMONJEDIS)
+    public Jedis getCommonJedis() {
+        return new Jedis(host);
+    }
+
+    @Bean(JEDIS)
+    public Jedis getReadJedis() {
+        return new Jedis(host);
+    }
+
+    @Bean("taskExecutor")
+    public ThreadPoolTaskExecutor getExecutorPool() {
+
+        ThreadPoolTaskExecutor threadPoolTaskExecutor = new ThreadPoolTaskExecutor();
+        threadPoolTaskExecutor.setMaxPoolSize(6);
+        threadPoolTaskExecutor.setKeepAliveSeconds(200);
+        threadPoolTaskExecutor.setQueueCapacity(20);
+        threadPoolTaskExecutor.setRejectedExecutionHandler(getPolicy());
+        return threadPoolTaskExecutor;
+
+    }
+
+    @Bean
+    public ThreadPoolExecutor.CallerRunsPolicy getPolicy() {
+        return new ThreadPoolExecutor.CallerRunsPolicy();
     }
 
 

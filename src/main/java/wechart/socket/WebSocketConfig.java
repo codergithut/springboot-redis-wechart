@@ -15,8 +15,6 @@ import javax.servlet.ServletContext;
  * @version 1.0, 2017/5/12
  * @description
  */
-@ComponentScan
-@EnableAutoConfiguration
 @Configuration
 public class WebSocketConfig {
     @Bean

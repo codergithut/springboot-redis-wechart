@@ -2,8 +2,12 @@ package wechart.socket;
 
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
-import org.springframework.context.annotation.ComponentScan;
+import org.springframework.context.annotation.Bean;
+import org.springframework.data.redis.core.HashOperations;
+import org.springframework.data.redis.core.SetOperations;
+import org.springframework.stereotype.Component;
 import redis.clients.jedis.Jedis;
+import redis.clients.jedis.JedisPubSub;
 import wechart.config.CommonValue;
 import wechart.model.User;
 import wechart.model.WebSocketMessage;
@@ -29,8 +33,8 @@ import java.util.concurrent.CopyOnWriteArraySet;
  * @version 1.0, 2017/4/24
  * @description
  */
-@ComponentScan
 @ServerEndpoint(value = "/websocket")
+@Component
 public class MyWebSocket implements CommonValue {
 
     //静态变量，用来记录当前在线连接数。应该把它设计成线程安全的。
@@ -42,39 +46,58 @@ public class MyWebSocket implements CommonValue {
     //与某个客户端的连接会话，需要通过它来给客户端发送数据
     private Session session;
 
-    private String userid;
+    private String id;
 
-    Jedis write = BeanUtils.getBean(JEDIS);
+    UserServiceImpl userServiceImpl;
 
-    UserServiceImpl userServiceImpl = BeanUtils.getBean("userServiceImpl");
+    SetOperations setOperations;
+
+    HashOperations hashOperations;
+
+    JedisPubSubListener jedisPubSubListener;
+
+    Jedis read;
+
+    Jedis sub;
+
+    private void init() {
+        setOperations = BeanUtils.getBean("setOperations");
+
+        hashOperations = BeanUtils.getBean("hashOperations");
+
+        userServiceImpl = BeanUtils.getBean("userServiceImpl");
+
+        jedisPubSubListener = BeanUtils.getBean("jedisPubSubListener");
+
+        read = BeanUtils.getBean(JEDIS);
+
+        sub = BeanUtils.getBean(SUBJEDIS);
+    }
 
 
     /**
      * 连接建立成功调用的方法*/
     @OnOpen
     public void onOpen(Session session) throws Exception {
+        init();
         this.session = session;
-
         String token = session.getRequestParameterMap().get(TOKEN).toString();
-        String id = null;
-        List<String> val = write.hmget(LOGININFO, token);
-        if(val != null && val.size() == 1) {
-            id = val.get(0);
-        }
+        token = token.substring(1,token.length() -1);
+        String id = (String)hashOperations.get(LOGININFO, token);
         //加入set中
         //在线数加1
         addOnlineCount();
         if(id != null){
-            userid = id;
+            this.id = id;
             webSocketSet.add(this);
             System.out.println("有新连接加入！当前在线人数为" + getOnlineCount());
             try {
-                Set<String> friends = write.smembers(userid);
+                Set<String> friends = setOperations.members(this.id);
                 Map<String,Object> friendsData = new HashMap<String,Object>();
                 friendsData.put("type", "friendsinfo");
                 friendsData.put("Data", friends);
 
-                User user = userServiceImpl.get(userid);
+                User user = userServiceImpl.get(this.id);
                 Map<String,Object> userData = new HashMap<String,Object>();
                 userData.put("type", "userinfo");
                 userData.put("Data", user);
@@ -89,8 +112,11 @@ public class MyWebSocket implements CommonValue {
                 sendMessage(JSON.toJSONString(userData));
 
                 //获取离线消息
-                Set<String> allinfo = write.smembers(WAITERECEIVEMESSAGE + userid);
-                write.srem(WAITERECEIVEMESSAGE + userid);
+                Set<String> allinfo = setOperations.members(WAITERECEIVEMESSAGE + this.id);
+
+                setOperations.remove(WAITERECEIVEMESSAGE + this.id, allinfo);
+
+//                setOperations.move()
 
                 for(String s : allinfo) {
                     WebSocketMessage message = JSON.parseObject(s, WebSocketMessage.class);
@@ -110,6 +136,18 @@ public class MyWebSocket implements CommonValue {
             onClose();
             throw new Exception("this is unsave session");
         }
+
+        /**
+         * 订阅会歇逼 需要异步处理
+         *
+         */
+        jedisPubSubListener.setMyWebSocket(this);
+
+        jedisPubSubListener.setJedis(sub);
+
+        jedisPubSubListener.listen();
+
+        System.out.println("ashdfalsdfha");
 
     }
 
@@ -132,34 +170,39 @@ public class MyWebSocket implements CommonValue {
     public void onMessage(String recMessage, Session session) throws IOException {
         //todo message需要给我特定的说明比如 添加好友addfriend@+消息体 聊天就是talk@+消息体 群聊天就是allTalk@+消息体  等等
 
-        WebSocketMessage message = JSON.parseObject(recMessage, WebSocketMessage.class);
 
-        if(message.getType().equals("TALK")) {
-            sendUserInfo(message);
-        }
+        System.out.println("asdfasdfasdfasdf" + recMessage);
 
+        sendUserInfo(recMessage);
 
-
-
-        JSONObject jsStr = JSONObject.parseObject(recMessage);
-        String type = jsStr.get("type").toString();
-        if(type.equals("talk")) {
-            sendUserInfo(jsStr);
-        }
-
-        if(type.equals("addFriend")) {
-            sendAddFriendRequest(jsStr);
-        }
-
-        if(type.equals("agreeFriend")) {
-            sendResultFrendRequest(jsStr);
-        }
-
-        if(type.equals("recFriend")) {
-
-        }
+//        WebSocketMessage message = JSON.parseObject(recMessage, WebSocketMessage.class);
+//
+//        if(message.getType().equals("TALK")) {
+//            sendUserInfo(message);
+//        }
+//
+//
+//        JSONObject jsStr = JSONObject.parseObject(recMessage);
+//        sendUserInfo(jsStr);
+//        String type = jsStr.get("type").toString();
+//        if(type.equals("talk")) {
+//            sendUserInfo(jsStr);
+//        }
+//
+//        if(type.equals("addFriend")) {
+//            sendAddFriendRequest(jsStr);
+//        }
+//
+//        if(type.equals("agreeFriend")) {
+//            sendResultFrendRequest(jsStr);
+//        }
+//
+//        if(type.equals("recFriend")) {
+//
+//        }
 
     }
+
 
     private void sendUserInfo(WebSocketMessage message) throws IOException {
 
@@ -167,27 +210,23 @@ public class MyWebSocket implements CommonValue {
 
         String messageInfo = JSON.toJSONString(message);
 
-        for(MyWebSocket item : webSocketSet) {
-            if(item.getUserid() != null && item.getUserid().equals(message.getReceivedId())) {
-                item.sendMessage(messageInfo);
-                flag = true;
-                saveHistoryContent(messageInfo, message.getReceivedId());
+        read.publish(message.getReceivedId(), messageInfo);
 
-            }
-        }
+        saveHistoryContent(messageInfo, message.getReceivedId());
 
-        if(!flag) {
-            write.sadd(WAITERECEIVEMESSAGE + message.getReceivedId(), messageInfo);
-        }
     }
 
 
     private void saveHistoryContent(String message, String receivedId) {
-        String talkKey = StringSort.getKeyBySort(new String[]{userid, receivedId});
-        if(!write.sismember(HISTORYCONTENT, talkKey)){
-            write.sadd(HISTORYCONTENT, talkKey);
+        String talkKey = StringSort.getKeyBySort(new String[]{this.id, receivedId});
+
+        if(!setOperations.isMember(HISTORYCONTENT, talkKey)){
+
+            setOperations.add(HISTORYCONTENT, talkKey);
         }
-        write.sadd(talkKey, message);
+
+        setOperations.add(talkKey, message);
+
     }
 
 
@@ -197,74 +236,42 @@ public class MyWebSocket implements CommonValue {
         String id = jsStr.get("id").toString();
         if(result.equals("agree")) {
 
-            write.sadd(userid, toid);
-            write.sadd(toid, userid);
+            setOperations.add(this.id, id);
+            setOperations.add(id, this.id);
 
-            for(MyWebSocket item : webSocketSet) {
-                if(item.getUserid() != null && item.getUserid().equals(toid)) {
+            Set<String> friends = setOperations.members(toid);
+            Map<String,Object> friendsData = new HashMap<String,Object>();
+            friendsData.put("type", "friendsinfo");
+            friendsData.put("Data", friends);
 
-                    Set<String> friends = write.smembers(toid);
-                    Map<String,Object> friendsData = new HashMap<String,Object>();
-                    friendsData.put("type", "friendsinfo");
-                    friendsData.put("Data", friends);
-                    item.sendMessage(JSON.toJSONString(friendsData));
+            Map<String,String> send = new HashMap<String,String>();
+            send.put("type", "agree");
+            send.put("friendid", id);
 
-                    Map<String,String> send = new HashMap<String,String>();
-                    send.put("type", "agree");
-                    send.put("friendid", id);
-                    item.sendMessage(JSON.toJSONString(send));
-                }
-            }
-
-            for(MyWebSocket item : webSocketSet) {
-                if(item.getUserid() != null && item.getUserid().equals(id)) {
-                    Set<String> friends = write.smembers(id);
-                    Map<String,Object> friendsData = new HashMap<String,Object>();
-                    friendsData.put("type", "friendsinfo");
-                    friendsData.put("Data", friends);
-                    item.sendMessage(JSON.toJSONString(friendsData));
-                }
-            }
+            read.publish(toid, JSON.toJSONString(send));
+            read.publish(toid, JSON.toJSONString(friendsData));
         }
     }
 
     private void sendAddFriendRequest(JSONObject jsStr) throws IOException {
         String account = jsStr.get("account").toString();
         String id = jsStr.get("id").toString();
-        for(MyWebSocket item : webSocketSet) {
-            if(item.getUserid() != null && item.getUserid().equals(account)) {
-                Map<String,Object> data = new HashMap<String,Object>();
-                User user = userServiceImpl.get(id);
-                data.put("type", "friendRequest");
-                data.put("user",user);
-                item.sendMessage(JSON.toJSONString(data));
-            }
-        }
+        Map<String,Object> data = new HashMap<String,Object>();
+        User user = userServiceImpl.get(id);
+        data.put("type", "friendRequest");
+        data.put("user",user);
+        read.publish(account, JSON.toJSONString(data));
     }
 
 
-    public void sendUserInfo(JSONObject jsStr) throws IOException {
+    public void sendUserInfo(String jsStr) throws IOException {
         /**
          * 如果用户在线，发送消息到用户，并记录到mongodb如果用户不在线，记录到redis，当用户上线推送数据并记录到mngodb数据库中
          */
-        String toid = jsStr.get("otherId").toString();
-        boolean flag = false;
-        for(MyWebSocket item : webSocketSet) {
-            if(item.getUserid() != null && item.getUserid().equals(toid)) {
-                item.sendMessage(jsStr.toJSONString());
-                flag = true;
-            }
-        }
+//        String toid = jsStr.get("otherId").toString();
 
-        if(!flag) {
-            //todo 记录消息
-        }
+        read.publish(this.id, jsStr);
     }
-
-
-
-
-
 
 
     /**
@@ -296,12 +303,12 @@ public class MyWebSocket implements CommonValue {
         }
     }
 
-    public String getUserid() {
-        return userid;
+    public String getId() {
+        return id;
     }
 
-    public void setUserid(String userid) {
-        this.userid = userid;
+    public void setId(String id) {
+        this.id = id;
     }
 
     public static synchronized int getOnlineCount() {
@@ -314,6 +321,14 @@ public class MyWebSocket implements CommonValue {
 
     public static synchronized void subOnlineCount() {
         MyWebSocket.onlineCount--;
+    }
+
+    public static CopyOnWriteArraySet<MyWebSocket> getWebSocketSet() {
+        return webSocketSet;
+    }
+
+    public static void setWebSocketSet(CopyOnWriteArraySet<MyWebSocket> webSocketSet) {
+        MyWebSocket.webSocketSet = webSocketSet;
     }
 
 }

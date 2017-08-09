@@ -2,12 +2,14 @@ package wechart.controller;
 
 import net.sourceforge.pinyin4j.format.exception.BadHanyuPinyinOutputFormatCombination;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.redis.core.HashOperations;
 import org.springframework.data.redis.core.SetOperations;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.web.bind.annotation.*;
+import redis.clients.jedis.Jedis;
 import wechart.config.CommonValue;
 import wechart.model.User;
 import wechart.service.impl.UserServiceImpl;
@@ -35,8 +37,12 @@ public class UserController implements CommonValue{
     @Autowired
     SetOperations setOperations;
 
-    @Autowired
-    private UserServiceImpl service;
+//    @Autowired
+//    @Qualifier(JEDIS)
+//    Jedis write;
+//
+//    @Autowired
+//    private UserServiceImpl service;
 
     //注册添加用户信息
     @RequestMapping(value = "/register", method = RequestMethod.POST)
@@ -54,17 +60,19 @@ public class UserController implements CommonValue{
 //        }
         User m = new User();
         String userId = getNumberAsId(2);
-        while(setOperations.isMember("USERID", userId)) {
+
+
+        while(setOperations.isMember(USERID,userId)) {
             userId = getNumberAsId(10);
         }
-        setOperations.add("USERID", userId);
+        setOperations.add(USERID, userId);
         m.setRedisKey(userId);
         m.setPassword(password);
         m.setUsername(username);
         m.setPinying(GetPingyin.getPingYin(m.getUsername()));
         m.setBinding(email);
-        service.put(m.getRedisKey(), m, -1);
-        hashOperations.put("BINDINGINFO", email, m.getRedisKey());
+        hashOperations.put(USRINFO, m.getRedisKey(), m);
+        hashOperations.put(BINDINGINFO, email, m.getRedisKey());
         System.out.println("add success end...");
         return m;
     }
@@ -82,9 +90,10 @@ public class UserController implements CommonValue{
 
         String changeId = (String)hashOperations.get(RESETUSERINFO, code);
 
-        User m = service.get(changeId);
+        User m = (User)hashOperations.get(USRINFO, changeId);
         m.setPassword("tianjian");
-        service.put(m.getRedisKey(), m, -1);
+
+        hashOperations.put(USERID, m.getRedisKey(), m);
         System.out.println("add success end...");
         return m;
     }
@@ -94,7 +103,7 @@ public class UserController implements CommonValue{
     @ResponseBody
     public Object loignInfo(HttpServletResponse response, @RequestParam("account") String account, @RequestParam("password") String password) {
         boolean flag = false;
-        User m = service.get(account);
+        User m = (User)hashOperations.get(USERID,account);
 
         if(m == null) {
             return false;
@@ -102,8 +111,8 @@ public class UserController implements CommonValue{
 
         String token = UUIDTool.getUUID();
         if(m.getRedisKey().equals(account) && m.getPassword().equals(password)) {
-            hashOperations.put("LOGININFO", token, m.getRedisKey());
-            Cookie cookie = new Cookie("wechart-cookie", token);
+            hashOperations.put(LOGININFO, token, m.getRedisKey());
+            Cookie cookie = new Cookie(COOK_NAME, token);
             response.addCookie(cookie);
             flag = true;
         }
@@ -130,7 +139,7 @@ public class UserController implements CommonValue{
 
         String changeId = (String)hashOperations.get(BINDINGINFO, "1731857742@qq.com");
 
-        User m = service.get(changeId);
+        User m = (User)hashOperations.get(USERID,changeId);
 
         String code = RandomUtils.randomUtil();
 
@@ -141,7 +150,7 @@ public class UserController implements CommonValue{
         simpleMailMessage.setText("尊敬的用户你好，你现在正在尝试重置用户名为:" + m.getUsername()
                 + "的密码！" + "验证码如下: " + code);
 
-        hashOperations.put("RESETUSERINFO", code, m.getRedisKey());
+        hashOperations.put(RESETUSERINFO, code, m.getRedisKey());
 
         mailSender.send(simpleMailMessage);
 
@@ -173,7 +182,7 @@ public class UserController implements CommonValue{
         simpleMailMessage.setText("尊敬的用户你好，已收到:" + initor
                 + " 发出的邀请码，邀请码码如下: " + inviteCode);
 
-        setOperations.add("INVITECODE", inviteCode);
+        setOperations.add(INVITECODE, inviteCode);
 
         System.out.println(inviteCode);
 

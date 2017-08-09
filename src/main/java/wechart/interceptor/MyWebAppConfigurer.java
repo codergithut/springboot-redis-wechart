@@ -13,8 +13,8 @@ import wechart.config.RedisConfig;
  * @version 1.0, 2017/8/4
  * @description
  */
-@Configuration
-@Import(RedisConfig.class)
+//@Configuration
+//@Import(RedisConfig.class)
 public class MyWebAppConfigurer extends WebMvcConfigurerAdapter implements CommonValue {
     @Autowired
     RedisConfig redisConfig;

@@ -2,10 +2,7 @@ package wechart.controller;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestMethod;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.bind.annotation.*;
 import wechart.model.RedisModel;
 import wechart.service.impl.RedisServiceImpl;
 
@@ -14,7 +11,7 @@ import wechart.service.impl.RedisServiceImpl;
  * @version 1.0, 2017/8/4
  * @description
  */
-@Controller
+@RestController
 public class TestController {
     @Autowired
     private RedisServiceImpl service;

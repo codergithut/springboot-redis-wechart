@@ -7,11 +7,17 @@ public interface CommonValue {
 
     static final String JEDIS = "jedis";
 
+    static final String SUBJEDIS = "subJedis";
+
+    static final String COMMONJEDIS = "commonJedis";
+
     static final String TOKEN = "token";
 
     static final String INVITECODE = "INVITECODE";
 
     static final String BINDINGINFO = "BINDINGINFO";
+
+    static final String USERID = "USERID";
 
     static final String RESETUSERINFO= "RESETUSERINFO";
 
