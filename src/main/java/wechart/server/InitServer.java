@@ -20,8 +20,8 @@ import java.util.concurrent.CopyOnWriteArraySet;
  * @version 1.0, 2017/8/7
  * @description
  */
-@Component
-@Service
+//@Component
+//@Service
 public class InitServer implements CommandLineRunner, CommonValue {
 
     @Autowired
@@ -41,17 +41,17 @@ public class InitServer implements CommandLineRunner, CommonValue {
     @Override
     public void run(String... args) {
         boolean flag = true;
-        while(flag) {
-            System.out.println(locked.isLocked());
-            if(locked.isLocked()) {
-                if(jedisPubSubListener.getListeners().size() > 0) {
-                    jedisPubSubListener.listen();
-                    locked.setLocked(false);
-                }
-
-            }
-
-        }
+//        while(flag) {
+//            System.out.println(locked.isLocked());
+//            if(locked.isLocked()) {
+//                if(jedisPubSubListener.getListeners().size() > 0) {
+//                    jedisPubSubListener.listen();
+//                    locked.setLocked(false);
+//                }
+//
+//            }
+//
+//        }
 
     }
 

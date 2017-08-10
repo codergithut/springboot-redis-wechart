@@ -69,7 +69,7 @@ public class UserControllerTest implements CommonValue{
     public Object loignInfo(HttpServletResponse response) {
         boolean flag = false;
 
-        User m = service.get("32");
+        User m = service.get("15");
 
         String token = UUIDTool.getUUID();
         hashOperations.put(LOGININFO, token, m.getRedisKey());

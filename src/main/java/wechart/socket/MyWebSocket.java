@@ -2,6 +2,7 @@ package wechart.socket;
 
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.data.redis.core.HashOperations;
 import org.springframework.data.redis.core.SetOperations;
@@ -148,7 +149,7 @@ public class MyWebSocket implements CommonValue {
 
         jedisPubSubListener.add(jedisPubSubListener);
 
-        locked.setLocked(true);
+        jedisPubSubListener.listen(jedisPubSubListener);
 
 
     }
@@ -288,7 +289,7 @@ public class MyWebSocket implements CommonValue {
 
      public void sendMessage(String message) throws IOException {
      this.session.getBasicRemote().sendText(message);
-     //this.session.getAsyncRemote().sendText(message);
+//     this.session.getAsyncRemote().sendText(message);
      }
 
 

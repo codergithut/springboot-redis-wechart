@@ -18,6 +18,7 @@ import java.util.List;
  * @description
  */
 @Service
+@Scope("prototype")
 public class JedisPubSubListener extends JedisPubSub {
 
     MyWebSocket myWebSocket;
@@ -32,10 +33,6 @@ public class JedisPubSubListener extends JedisPubSub {
         this.flag = flag;
     }
 
-    @Autowired
-    @Qualifier("SUBJEDIS")
-    Jedis jedis;
-
     List<JedisPubSubListener> listeners = new ArrayList<JedisPubSubListener>();
 
     public void add(JedisPubSubListener jedisPubSubListener) {
@@ -47,6 +44,7 @@ public class JedisPubSubListener extends JedisPubSub {
     public void onMessage(String channel, String message ) {
         try {
             System.out.println("hahahah");
+            System.out.println("channel : " + channel + " message : " + message);
             myWebSocket.sendMessage(message);
         } catch (IOException e) {
             e.printStackTrace();
@@ -70,13 +68,17 @@ public class JedisPubSubListener extends JedisPubSub {
     }
 
     @Async("taskExecutor")
-    public void listen() {
-        for(JedisPubSubListener listener : listeners) {
-            if(listener.isFlag()) {
-                jedis.subscribe(this, myWebSocket.getId());
-            }
-            listener.setFlag(false);
-        }
+    public void listen(final JedisPubSubListener jedisPubSubListener) {
+        System.out.println("注册ID为：" + myWebSocket.getId());
 
+
+        new Thread() {
+            @Override
+            public void  run() {
+                final Jedis jedis = new Jedis("192.168.50.210");
+                jedis.subscribe(jedisPubSubListener, myWebSocket.getId());
+                jedis.close();
+            }
+        }.start();
     }
 }
