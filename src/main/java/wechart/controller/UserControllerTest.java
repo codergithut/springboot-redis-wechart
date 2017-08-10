@@ -11,7 +11,6 @@ import wechart.config.CommonValue;
 import wechart.model.User;
 import wechart.service.impl.UserServiceImpl;
 import wechart.util.GetPingyin;
-import wechart.util.RandomUtils;
 import wechart.util.UUIDTool;
 
 import javax.servlet.http.Cookie;
