@@ -1,17 +1,13 @@
-package rabbitmq.controller;
+package wechart.rabbitmq.controller;
 
 import org.springframework.amqp.core.Queue;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.RestController;
-import rabbitmq.service.receive.RecMessageListener;
-import rabbitmq.service.receive.ReceivedMessage;
-import rabbitmq.service.send.SendMessage;
-import rabbitmq.service.send.SendMessageService;
-
-import java.util.ArrayList;
-import java.util.List;
+import wechart.rabbitmq.service.receive.RecMessageListener;
+import wechart.rabbitmq.service.receive.ReceivedMessage;
+import wechart.rabbitmq.service.send.SendMessage;
 
 /**
  * @author <a href="mailto:Administrator@gtmap.cn">Administrator</a>
@@ -28,7 +24,7 @@ public class RabbitMqController {
     ReceivedMessage receivedMessage;
 
 
-    @RequestMapping(value = "/rabbitmq")
+    @RequestMapping(value = "/wechart/rabbitmq")
     @ResponseBody
     public void testRabbitMq() {
         RecMessageListener recMessageListener = new RecMessageListener();

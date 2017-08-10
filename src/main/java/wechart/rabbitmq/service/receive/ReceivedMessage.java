@@ -1,4 +1,4 @@
-package rabbitmq.service.receive;
+package wechart.rabbitmq.service.receive;
 
 import org.springframework.amqp.core.Queue;
 import org.springframework.amqp.rabbit.connection.ConnectionFactory;
@@ -6,8 +6,6 @@ import org.springframework.amqp.rabbit.core.ChannelAwareMessageListener;
 import org.springframework.amqp.rabbit.listener.SimpleMessageListenerContainer;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-
-import java.util.List;
 
 /**
  * @author <a href="mailto:Administrator@gtmap.cn">Administrator</a>

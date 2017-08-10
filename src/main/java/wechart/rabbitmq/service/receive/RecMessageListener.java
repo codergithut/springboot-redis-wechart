@@ -1,4 +1,4 @@
-package rabbitmq.service.receive;
+package wechart.rabbitmq.service.receive;
 
 import com.rabbitmq.client.Channel;
 import org.springframework.amqp.core.Message;

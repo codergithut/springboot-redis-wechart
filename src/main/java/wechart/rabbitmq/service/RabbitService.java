@@ -1,4 +1,4 @@
-package rabbitmq.service;
+package wechart.rabbitmq.service;
 
 import com.rabbitmq.client.Channel;
 import com.rabbitmq.client.Connection;

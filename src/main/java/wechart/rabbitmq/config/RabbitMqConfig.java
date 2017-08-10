@@ -1,4 +1,4 @@
-package rabbitmq.config;
+package wechart.rabbitmq.config;
 
 import com.rabbitmq.client.ConnectionFactory;
 import org.springframework.amqp.rabbit.connection.CachingConnectionFactory;
