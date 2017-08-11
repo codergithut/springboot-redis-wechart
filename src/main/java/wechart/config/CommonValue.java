@@ -7,10 +7,6 @@ public interface CommonValue {
 
     static final String JEDIS = "jedis";
 
-    static final String SUBJEDIS = "subJedis";
-
-    static final String COMMONJEDIS = "commonJedis";
-
     static final String TOKEN = "token";
 
     static final String INVITECODE = "INVITECODE";
@@ -23,7 +19,7 @@ public interface CommonValue {
 
     static final String LOGININFO = "LOGININFO";
 
-    static final String COOK_NAME = "wechart-cookie";
+    static final String COOK_NAME = "WECHAET-COOKIE";
 
     static final String FRIENDS = "FRIENDS";
 
@@ -34,8 +30,6 @@ public interface CommonValue {
     static final String PRFIX_REGISTER="register";
 
     static final String USRINFO = "USRINFO";
-
-    static final String WAITERECEIVEMESSAGE = "WAITERECEIVEMESSAGE";
 
     static final String HISTORYCONTENT = "HISTORYCONTENT";
 }

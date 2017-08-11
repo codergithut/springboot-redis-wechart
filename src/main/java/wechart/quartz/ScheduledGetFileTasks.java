@@ -3,13 +3,12 @@ package wechart.quartz;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Configurable;
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.data.mongodb.core.IndexOperations;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.index.Index;
 import org.springframework.data.mongodb.core.query.Order;
+import org.springframework.data.redis.core.SetOperations;
 import org.springframework.stereotype.Component;
-import redis.clients.jedis.Jedis;
 import wechart.config.CommonValue;
 import wechart.model.TalkHistoryContent;
 
@@ -31,8 +30,7 @@ public class ScheduledGetFileTasks implements CommonValue{
     MongoTemplate mongoTemplate;
 
     @Autowired
-    @Qualifier(JEDIS)
-    Jedis read;
+    SetOperations setOperations;
 
     public void saveHistoryContent() throws Exception {
 
@@ -44,11 +42,11 @@ public class ScheduledGetFileTasks implements CommonValue{
 
         io.ensureIndex(index);
 
-        Set<String> keys = read.smembers(HISTORYCONTENT);
+        Set<String> keys = setOperations.members(HISTORYCONTENT);
 
         for(String key : keys) {
 
-            Set<String> contents = read.smembers(key);
+            Set<String> contents = setOperations.members(key);
 
             String[] members = key.split("_");
 
@@ -59,7 +57,9 @@ public class ScheduledGetFileTasks implements CommonValue{
             List<String> files = new ArrayList<String>();
 
             for(String content : contents) {
+
                 files.add(content);
+
             }
 
             mongoTemplate.save(talkHistoryContent);
