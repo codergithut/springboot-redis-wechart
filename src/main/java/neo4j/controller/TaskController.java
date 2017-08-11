@@ -38,7 +38,7 @@ public class TaskController {
     @ResponseBody
     public Object create() {
         Task task = taskRepository.findByTaskName("test");
-        Object o = neo4jTemplate.queryForObjects(Task.class, "", null);
-        return o;
+        long count = neo4jTemplate.count(Task.class);
+        return count;
     }
 }
