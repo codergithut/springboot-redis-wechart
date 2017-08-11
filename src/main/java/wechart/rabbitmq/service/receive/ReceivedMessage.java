@@ -19,9 +19,11 @@ public class ReceivedMessage {
     ConnectionFactory connectionFactory;
 
     public SimpleMessageListenerContainer messageContainer(Queue[] queueList, ChannelAwareMessageListener listener) {
+
         SimpleMessageListenerContainer container = new SimpleMessageListenerContainer(connectionFactory);
         container.setQueues(queueList);
         container.setMessageListener(listener);
+
         return container;
     }
 

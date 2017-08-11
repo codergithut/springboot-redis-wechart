@@ -28,7 +28,10 @@ public class SendMessageService {
     @Scope(ConfigurableBeanFactory.SCOPE_PROTOTYPE)
     //必须是prototype类型
     public RabbitTemplate rabbitTemplate() {
+
         RabbitTemplate template = new RabbitTemplate(connectionFactory);
+
         return template;
+
     }
 }

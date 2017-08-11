@@ -27,6 +27,7 @@ public class RabbitMqController {
     @RequestMapping(value = "/rabbitmq")
     @ResponseBody
     public void testRabbitMq() {
+
         RecMessageListener recMessageListener = new RecMessageListener();
 
         Queue queue = new Queue("10000001");

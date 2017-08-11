@@ -13,7 +13,9 @@ import net.sourceforge.pinyin4j.format.exception.BadHanyuPinyinOutputFormatCombi
  * @description
  */
 public class GetPingyin {
+
     public static String getPingYin(String src) throws BadHanyuPinyinOutputFormatCombination {
+
         char[] t1 = null;
 
         t1 = src.toCharArray();

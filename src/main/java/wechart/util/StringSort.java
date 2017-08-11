@@ -25,10 +25,12 @@ public class StringSort {
                 }
             }
         }
+
         StringBuffer key = new StringBuffer();
         for(String s : keys) {
             key.append("_" + s);
         }
+
         return key.toString();
     }
 

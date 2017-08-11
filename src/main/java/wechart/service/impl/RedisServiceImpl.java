@@ -11,6 +11,7 @@ import wechart.service.IHsahRedisService;
  */
 @Service
 public class RedisServiceImpl extends IHsahRedisService<RedisModel> {
+
     private static final String REDIS_KEY = "TEST_REDIS_KEY";
 
     @Override

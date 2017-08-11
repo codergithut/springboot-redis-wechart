@@ -14,12 +14,16 @@ import wechart.config.RedisConfig;
 //@Configuration
 //@Import(RedisConfig.class)
 public class MyWebAppConfigurer extends WebMvcConfigurerAdapter implements CommonValue {
+
     @Autowired
     RedisConfig redisConfig;
 
+    @Autowired
+    MyInterceptor myInterceptor;
+
     @Override
     public void addInterceptors(InterceptorRegistry registry) {
-        registry.addInterceptor(redisConfig.getMyInterceptor()).addPathPatterns("/**").excludePathPatterns("//" + PRFIX_LOGIN,"//" + PRFIX_REGISTER,"/save");
+        registry.addInterceptor(myInterceptor).addPathPatterns("/**").excludePathPatterns("//" + PRFIX_LOGIN,"//" + PRFIX_REGISTER,"/save");
         super.addInterceptors(registry);
     }
 

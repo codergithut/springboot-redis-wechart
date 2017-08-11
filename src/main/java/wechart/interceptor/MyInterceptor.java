@@ -1,5 +1,7 @@
 package wechart.interceptor;
 
+import org.springframework.data.redis.core.HashOperations;
+import org.springframework.stereotype.Service;
 import org.springframework.web.servlet.HandlerInterceptor;
 import org.springframework.web.servlet.ModelAndView;
 import redis.clients.jedis.Jedis;
@@ -14,41 +16,52 @@ import javax.servlet.http.HttpServletResponse;
  * @version 1.0, 2017/8/4
  * @description
  */
-
 public class MyInterceptor implements HandlerInterceptor, CommonValue {
 
-    public void setRead(Jedis read) {
-        this.read = read;
+    public void setHashOperations(HashOperations hashOperations) {
+
+        this.hashOperations = hashOperations;
+
     }
 
-    private Jedis read;
+    private HashOperations hashOperations;
 
     @Override
     public boolean preHandle(HttpServletRequest httpServletRequest, HttpServletResponse httpServletResponse, Object o) throws Exception {
+
         System.out.println(">>>MyInterceptor>>>>>>>在请求处理之前进行调用（Controller方法调用之前）");
+
         boolean flag = false;
+
         Cookie[] cookies = httpServletRequest.getCookies();
 
         if(cookies != null && cookies.length != 0) {
             try {
                 for (Cookie cookie : cookies) {
+
                     if (cookie.getName().equals(COOK_NAME)) {
+
                         if(cookie!=null && cookie.getValue()!=null) {
 
-                            flag = read.hexists(LOGININFO,cookie.getValue());
+                            flag = hashOperations.hasKey(LOGININFO, cookie.getValue());
 
                         }
                     }
                 }
 
                 if(!flag) {
+
                     httpServletResponse.sendRedirect(LOGIN_URL);
+
                     return false;
+
                 }
                 return true;
 
             } catch (Exception exp) {
+
                 throw exp;
+
             }
         } else {
             //httpServletResponse.sendRedirect("logininfo");

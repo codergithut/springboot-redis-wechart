@@ -32,25 +32,34 @@ public class SendMessage implements RabbitTemplate.ConfirmCallback {
      */
     @Autowired
     public SendMessage(RabbitTemplate rabbitTemplate) {
+
         this.rabbitTemplate = rabbitTemplate;
+
         rabbitTemplate.setConfirmCallback(this); //rabbitTemplate如果为单例的话，那回调就是最后设置的内容
+
     }
 
 
     public void sendExchangeMsg(String exchange, String key, String content) {
+
         CorrelationData correlationId = new CorrelationData(UUID.randomUUID().toString());
+
         rabbitTemplate.convertAndSend(exchange, key, content, correlationId);
+
     }
 
     /**
      * 回调
      */
     public void confirm(CorrelationData correlationData, boolean ack, String cause) {
+
         System.out.println(" client1  :" + correlationData);
+
         if (ack) {
             System.out.println("消息发送成功");
         } else {
             System.out.println("消息发送失败:" + cause);
         }
+
     }
 }

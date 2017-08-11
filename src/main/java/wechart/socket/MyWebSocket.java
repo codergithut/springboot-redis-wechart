@@ -9,13 +9,11 @@ import org.springframework.amqp.rabbit.core.ChannelAwareMessageListener;
 import org.springframework.data.redis.core.HashOperations;
 import org.springframework.data.redis.core.SetOperations;
 import org.springframework.stereotype.Component;
-import redis.clients.jedis.Jedis;
 import wechart.config.CommonValue;
 import wechart.model.User;
 import wechart.model.WebSocketMessage;
 import wechart.rabbitmq.service.receive.ReceivedMessage;
 import wechart.rabbitmq.service.send.SendMessage;
-import wechart.server.Locked;
 import wechart.service.impl.UserServiceImpl;
 import wechart.util.BeanUtils;
 import wechart.util.StringSort;
@@ -60,12 +58,6 @@ public class MyWebSocket implements CommonValue, ChannelAwareMessageListener {
 
     SendMessage sendMessage;
 
-    Locked locked;
-
-    Jedis read;
-
-    Jedis sub;
-
     ReceivedMessage receivedMessage;
 
     private void init() {
@@ -76,12 +68,6 @@ public class MyWebSocket implements CommonValue, ChannelAwareMessageListener {
         userServiceImpl = BeanUtils.getBean("userServiceImpl");
 
         receivedMessage = BeanUtils.getBean("receivedMessage");
-
-        read = BeanUtils.getBean(JEDIS);
-
-        sub = BeanUtils.getBean(SUBJEDIS);
-
-        locked = BeanUtils.getBean("locked");
 
         sendMessage = BeanUtils.getBean("sendMessage");
     }
@@ -124,18 +110,7 @@ public class MyWebSocket implements CommonValue, ChannelAwareMessageListener {
                  */
                 sendMessage(JSON.toJSONString(userData));
 
-                //获取离线消息
-                Set<String> allinfo = setOperations.members(WAITERECEIVEMESSAGE + this.id);
 
-                setOperations.remove(WAITERECEIVEMESSAGE + this.id, allinfo);
-
-                for (String s : allinfo) {
-                    WebSocketMessage message = JSON.parseObject(s, WebSocketMessage.class);
-                    /**
-                     * 先将文件存放到redis中
-                     */
-                    saveHistoryContent(s, message.getReceivedId());
-                }
             } catch (IOException e) {
                 System.out.println("IO异常");
             }
@@ -175,17 +150,21 @@ public class MyWebSocket implements CommonValue, ChannelAwareMessageListener {
 
     /**
      * 收到客户端消息后调用的方法
-     *
+     * 先将消息备份存入到redis中然后将消息发送到消息中间件中，为了实现消息快速路由和离线消息保存
      * @param recMessage 客户端发送过来的消息
      */
     @OnMessage
     public void onMessage(String recMessage, Session session) throws IOException {
         //todo message需要给我特定的说明比如 添加好友addfriend@+消息体 聊天就是talk@+消息体 群聊天就是allTalk@+消息体  等等
 
+        WebSocketMessage message = JSON.parseObject(recMessage, WebSocketMessage.class);
+
+        saveHistoryContent(recMessage, message.getReceivedId());
+
 
         System.out.println("asdfasdfasdfasdf" + recMessage);
 
-        sendUserInfo(recMessage);
+        sendUserInfo(recMessage, message.getReceivedId());
 
 //        WebSocketMessage message = JSON.parseObject(recMessage, WebSocketMessage.class);
 //
@@ -216,20 +195,15 @@ public class MyWebSocket implements CommonValue, ChannelAwareMessageListener {
     }
 
 
-    private void sendUserInfo(WebSocketMessage message) throws IOException {
-
-        boolean flag = false;
-
-        String messageInfo = JSON.toJSONString(message);
-
-        read.publish(message.getReceivedId(), messageInfo);
-
-        saveHistoryContent(messageInfo, message.getReceivedId());
-
-    }
-
-
+    /**
+     * @param message 用户发送的消息报文主体
+     * @param receivedId 接收方用户ID
+     */
     private void saveHistoryContent(String message, String receivedId) {
+
+        /**
+         * 发送方ID和接受方ID进行排序，作为无差别备份库的键，暂时存放为redis服务中，定期刷入到mongodb中
+         */
         String talkKey = StringSort.getKeyBySort(new String[]{this.id, receivedId});
 
         if (!setOperations.isMember(HISTORYCONTENT, talkKey)) {
@@ -240,7 +214,6 @@ public class MyWebSocket implements CommonValue, ChannelAwareMessageListener {
         setOperations.add(talkKey, message);
 
     }
-
 
     private void sendResultFrendRequest(JSONObject jsStr) throws IOException {
         String toid = jsStr.get("account").toString();
@@ -259,9 +232,6 @@ public class MyWebSocket implements CommonValue, ChannelAwareMessageListener {
             Map<String, String> send = new HashMap<String, String>();
             send.put("type", "agree");
             send.put("friendid", id);
-
-            read.publish(toid, JSON.toJSONString(send));
-            read.publish(toid, JSON.toJSONString(friendsData));
         }
     }
 
@@ -272,19 +242,19 @@ public class MyWebSocket implements CommonValue, ChannelAwareMessageListener {
         User user = userServiceImpl.get(id);
         data.put("type", "friendRequest");
         data.put("user", user);
-        read.publish(account, JSON.toJSONString(data));
     }
 
 
-    public void sendUserInfo(String jsStr) throws IOException {
-        /**
-         * 如果用户在线，发送消息到用户，并记录到mongodb如果用户不在线，记录到redis，当用户上线推送数据并记录到mngodb数据库中
-         */
-//        String toid = jsStr.get("otherId").toString();
+    /**
+     *
+     * @param jsStr 发送消息的报文
+     * @param receiveId 对端的ID（可以是好友，也可能是某个群） 需要使用exchange属性控制
+     * @throws IOException
+     */
+    public void sendUserInfo(String jsStr, String receiveId) throws IOException {
 
-        sendMessage.sendExchangeMsg(null, id, jsStr);
+        sendMessage.sendExchangeMsg(null, receiveId, jsStr);
 
-        read.publish(this.id, jsStr);
     }
 
 
@@ -306,7 +276,7 @@ public class MyWebSocket implements CommonValue, ChannelAwareMessageListener {
 
 
     /**
-     * 群发自定义消息
+     * 系统通知消息
      */
     public static void sendAllInfo(String message) throws IOException {
         for (MyWebSocket item : webSocketSet) {

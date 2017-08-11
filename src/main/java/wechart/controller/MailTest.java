@@ -25,7 +25,9 @@ public class MailTest {
 
     @RequestMapping(value="", method= RequestMethod.GET)
     public void testSendMail() {
+
         SimpleMailMessage simpleMailMessage = new SimpleMailMessage();
+
         simpleMailMessage.setFrom(username);
         simpleMailMessage.setTo("1731857742@qq.com");//接收邮件的邮箱
         simpleMailMessage.setSubject("测试");

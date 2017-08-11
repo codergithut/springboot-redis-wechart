@@ -12,7 +12,10 @@ import org.springframework.amqp.rabbit.core.ChannelAwareMessageListener;
 public class RecMessageListener implements ChannelAwareMessageListener {
     @Override
     public void onMessage(Message message, Channel channel) throws Exception {
+
         byte[] body = message.getBody();
+
         System.out.println(new String(body));
+
     }
 }

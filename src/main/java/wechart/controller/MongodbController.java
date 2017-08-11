@@ -90,9 +90,13 @@ public class MongodbController {
         List<TalkHistoryContent> list = mongoTemplate.find(query, TalkHistoryContent.class);
 
         for(TalkHistoryContent s : list) {
+
             System.out.println(s.toString());
+
         }
+
         return list;
+
     }
 
 }

@@ -39,56 +39,39 @@ public class RedisConfig implements CommonValue{
      */
     @Bean
     public RedisTemplate<String, Object> functionDomainRedisTemplate() {
+
         RedisTemplate<String, Object> redisTemplate = new RedisTemplate<String, Object>();
+
         initDomainRedisTemplate(redisTemplate, redisConnectionFactory);
+
         return redisTemplate;
+
     }
 
+
     @Bean
-    public MyInterceptor getMyInterceptor() {
+    @Autowired
+    public MyInterceptor getMyInterceptor(HashOperations hashOperations) {
+
         MyInterceptor myInterceptor = new MyInterceptor();
-        myInterceptor.setRead(getCommonJedis());
+
+        myInterceptor.setHashOperations(hashOperations);
+
         return myInterceptor;
+
     }
 
     @Bean
     public RedisConnectionFactory getRedisConnectionFactory() {
+
         JedisConnectionFactory redisFactory = new JedisConnectionFactory();
+
         redisFactory.setHostName(host);
+
         redisFactory.setTimeout(1000000);
+
         return redisFactory;
-    }
 
-    @Bean(SUBJEDIS)
-    public Jedis getSubJedis() {
-        return new Jedis(host);
-    }
-
-    @Bean(COMMONJEDIS)
-    public Jedis getCommonJedis() {
-        return new Jedis(host);
-    }
-
-    @Bean(JEDIS)
-    public Jedis getReadJedis() {
-        return new Jedis(host);
-    }
-
-    @Bean("taskExecutor")
-    public ThreadPoolTaskExecutor getExecutorPool() {
-
-        ThreadPoolTaskExecutor threadPoolTaskExecutor = new ThreadPoolTaskExecutor();
-        threadPoolTaskExecutor.setMaxPoolSize(6);
-        threadPoolTaskExecutor.setKeepAliveSeconds(200);
-        threadPoolTaskExecutor.setQueueCapacity(20);
-        threadPoolTaskExecutor.setRejectedExecutionHandler(getPolicy());
-        return threadPoolTaskExecutor;
-
-    }
-
-    @Bean
-    public ThreadPoolExecutor.CallerRunsPolicy getPolicy() {
-        return new ThreadPoolExecutor.CallerRunsPolicy();
     }
 
 
@@ -100,11 +83,13 @@ public class RedisConfig implements CommonValue{
      * @param factory
      */
     private void initDomainRedisTemplate(RedisTemplate<String, Object> redisTemplate, RedisConnectionFactory factory) {
+
         redisTemplate.setKeySerializer(new StringRedisSerializer());
         redisTemplate.setHashKeySerializer(new StringRedisSerializer());
         redisTemplate.setHashValueSerializer(new JdkSerializationRedisSerializer());
         redisTemplate.setValueSerializer(new JdkSerializationRedisSerializer());
         redisTemplate.setConnectionFactory(factory);
+
     }
 
     /**
@@ -115,7 +100,9 @@ public class RedisConfig implements CommonValue{
      */
     @Bean
     public HashOperations<String, String, Object> hashOperations(RedisTemplate<String, Object> redisTemplate) {
+
         return redisTemplate.opsForHash();
+
     }
 
     /**
@@ -126,7 +113,9 @@ public class RedisConfig implements CommonValue{
      */
     @Bean
     public ValueOperations<String, Object> valueOperations(RedisTemplate<String, Object> redisTemplate) {
+
         return redisTemplate.opsForValue();
+
     }
 
     /**
@@ -137,7 +126,9 @@ public class RedisConfig implements CommonValue{
      */
     @Bean
     public ListOperations<String, Object> listOperations(RedisTemplate<String, Object> redisTemplate) {
+
         return redisTemplate.opsForList();
+
     }
 
     /**
@@ -148,7 +139,9 @@ public class RedisConfig implements CommonValue{
      */
     @Bean
     public SetOperations<String, Object> setOperations(RedisTemplate<String, Object> redisTemplate) {
+
         return redisTemplate.opsForSet();
+
     }
 
     /**
@@ -159,6 +152,8 @@ public class RedisConfig implements CommonValue{
      */
     @Bean
     public ZSetOperations<String, Object> zSetOperations(RedisTemplate<String, Object> redisTemplate) {
+
         return redisTemplate.opsForZSet();
+
     }
 }

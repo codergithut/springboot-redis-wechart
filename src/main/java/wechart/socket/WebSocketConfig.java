@@ -17,6 +17,7 @@ import javax.servlet.ServletContext;
 public class WebSocketConfig {
     @Bean
     public ServletContextAware endpointExporterInitializer(final ApplicationContext applicationContext) {
+
         return new ServletContextAware() {
 
             @Override
@@ -30,6 +31,7 @@ public class WebSocketConfig {
                 }
             }
         };
+
     }
 
 
