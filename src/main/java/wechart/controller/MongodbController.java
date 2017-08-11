@@ -1,11 +1,5 @@
 package wechart.controller;
 
-import com.mongodb.BasicDBList;
-import com.mongodb.Bytes;
-import com.mongodb.CommandResult;
-import com.mongodb.DBObject;
-import com.mongodb.util.JSON;
-import mongodb.model.User;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.mongodb.core.IndexOperations;
 import org.springframework.data.mongodb.core.MongoTemplate;
@@ -13,9 +7,7 @@ import org.springframework.data.mongodb.core.index.Index;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Order;
 import org.springframework.data.mongodb.core.query.Query;
-import org.springframework.data.mongodb.core.query.Update;
 import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import wechart.model.TalkHistoryContent;
 

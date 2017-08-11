@@ -2,7 +2,6 @@ package wechart.socket;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import wechart.model.WebSocketMessage;
 
 /**
  * @author <a href="mailto:Administrator@gtmap.cn">Administrator</a>

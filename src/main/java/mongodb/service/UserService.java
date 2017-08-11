@@ -1,7 +1,7 @@
 package mongodb.service;
 
-import org.springframework.stereotype.Repository;
 import mongodb.model.User;
+import org.springframework.stereotype.Repository;
 
 /**
  * Created by tianjian on 2017/8/6.

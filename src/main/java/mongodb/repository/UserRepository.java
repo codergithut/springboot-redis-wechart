@@ -1,7 +1,7 @@
 package mongodb.repository;
 
-import org.springframework.data.mongodb.repository.MongoRepository;
 import mongodb.model.User;
+import org.springframework.data.mongodb.repository.MongoRepository;
 
 /**
  * Created by tianjian on 2017/8/6.

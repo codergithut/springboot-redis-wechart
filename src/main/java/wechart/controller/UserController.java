@@ -2,17 +2,14 @@ package wechart.controller;
 
 import net.sourceforge.pinyin4j.format.exception.BadHanyuPinyinOutputFormatCombination;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.redis.core.HashOperations;
 import org.springframework.data.redis.core.SetOperations;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.web.bind.annotation.*;
-import redis.clients.jedis.Jedis;
 import wechart.config.CommonValue;
 import wechart.model.User;
-import wechart.service.impl.UserServiceImpl;
 import wechart.util.GetPingyin;
 import wechart.util.RandomUtils;
 import wechart.util.UUIDTool;

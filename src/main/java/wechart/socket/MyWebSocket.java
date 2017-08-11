@@ -2,16 +2,19 @@ package wechart.socket;
 
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.annotation.Bean;
+import com.rabbitmq.client.Channel;
+import org.springframework.amqp.core.Message;
+import org.springframework.amqp.core.Queue;
+import org.springframework.amqp.rabbit.core.ChannelAwareMessageListener;
 import org.springframework.data.redis.core.HashOperations;
 import org.springframework.data.redis.core.SetOperations;
 import org.springframework.stereotype.Component;
 import redis.clients.jedis.Jedis;
-import redis.clients.jedis.JedisPubSub;
 import wechart.config.CommonValue;
 import wechart.model.User;
 import wechart.model.WebSocketMessage;
+import wechart.rabbitmq.service.receive.ReceivedMessage;
+import wechart.rabbitmq.service.send.SendMessage;
 import wechart.server.Locked;
 import wechart.service.impl.UserServiceImpl;
 import wechart.util.BeanUtils;
@@ -24,7 +27,6 @@ import javax.websocket.Session;
 import javax.websocket.server.ServerEndpoint;
 import java.io.IOException;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.CopyOnWriteArraySet;
@@ -37,7 +39,7 @@ import java.util.concurrent.CopyOnWriteArraySet;
  */
 @ServerEndpoint(value = "/websocket")
 @Component
-public class MyWebSocket implements CommonValue {
+public class MyWebSocket implements CommonValue, ChannelAwareMessageListener {
 
     //静态变量，用来记录当前在线连接数。应该把它设计成线程安全的。
     private static int onlineCount = 0;
@@ -56,11 +58,15 @@ public class MyWebSocket implements CommonValue {
 
     HashOperations hashOperations;
 
+    SendMessage sendMessage;
+
     Locked locked;
 
     Jedis read;
 
     Jedis sub;
+
+    ReceivedMessage receivedMessage;
 
     private void init() {
         setOperations = BeanUtils.getBean("setOperations");
@@ -69,38 +75,43 @@ public class MyWebSocket implements CommonValue {
 
         userServiceImpl = BeanUtils.getBean("userServiceImpl");
 
+        receivedMessage = BeanUtils.getBean("receivedMessage");
+
         read = BeanUtils.getBean(JEDIS);
 
         sub = BeanUtils.getBean(SUBJEDIS);
 
         locked = BeanUtils.getBean("locked");
+
+        sendMessage = BeanUtils.getBean("sendMessage");
     }
 
 
     /**
-     * 连接建立成功调用的方法*/
+     * 连接建立成功调用的方法
+     */
     @OnOpen
     public void onOpen(Session session) throws Exception {
         init();
         this.session = session;
         String token = session.getRequestParameterMap().get(TOKEN).toString();
-        token = token.substring(1,token.length() -1);
-        String id = (String)hashOperations.get(LOGININFO, token);
+        token = token.substring(1, token.length() - 1);
+        String id = (String) hashOperations.get(LOGININFO, token);
         //加入set中
         //在线数加1
         addOnlineCount();
-        if(id != null){
+        if (id != null) {
             this.id = id;
             webSocketSet.add(this);
             System.out.println("有新连接加入！当前在线人数为" + getOnlineCount());
             try {
                 Set<String> friends = setOperations.members(this.id);
-                Map<String,Object> friendsData = new HashMap<String,Object>();
+                Map<String, Object> friendsData = new HashMap<String, Object>();
                 friendsData.put("type", "friendsinfo");
                 friendsData.put("Data", friends);
 
                 User user = userServiceImpl.get(this.id);
-                Map<String,Object> userData = new HashMap<String,Object>();
+                Map<String, Object> userData = new HashMap<String, Object>();
                 userData.put("type", "userinfo");
                 userData.put("Data", user);
                 /**
@@ -118,9 +129,7 @@ public class MyWebSocket implements CommonValue {
 
                 setOperations.remove(WAITERECEIVEMESSAGE + this.id, allinfo);
 
-//                setOperations.move()
-
-                for(String s : allinfo) {
+                for (String s : allinfo) {
                     WebSocketMessage message = JSON.parseObject(s, WebSocketMessage.class);
                     /**
                      * 先将文件存放到redis中
@@ -143,13 +152,12 @@ public class MyWebSocket implements CommonValue {
          * 订阅会歇逼 需要异步处理
          *
          */
-        JedisPubSubListener jedisPubSubListener = BeanUtils.getBean("jedisPubSubListener");
 
-        jedisPubSubListener.setMyWebSocket(this);
+        Queue queue = new Queue(id);
 
-        jedisPubSubListener.add(jedisPubSubListener);
+        Queue[] queues = new Queue[]{queue};
 
-        jedisPubSubListener.listen(jedisPubSubListener);
+        receivedMessage.messageContainer(queues, this).start();
 
 
     }
@@ -168,7 +176,8 @@ public class MyWebSocket implements CommonValue {
     /**
      * 收到客户端消息后调用的方法
      *
-     * @param recMessage 客户端发送过来的消息*/
+     * @param recMessage 客户端发送过来的消息
+     */
     @OnMessage
     public void onMessage(String recMessage, Session session) throws IOException {
         //todo message需要给我特定的说明比如 添加好友addfriend@+消息体 聊天就是talk@+消息体 群聊天就是allTalk@+消息体  等等
@@ -223,7 +232,7 @@ public class MyWebSocket implements CommonValue {
     private void saveHistoryContent(String message, String receivedId) {
         String talkKey = StringSort.getKeyBySort(new String[]{this.id, receivedId});
 
-        if(!setOperations.isMember(HISTORYCONTENT, talkKey)){
+        if (!setOperations.isMember(HISTORYCONTENT, talkKey)) {
 
             setOperations.add(HISTORYCONTENT, talkKey);
         }
@@ -237,17 +246,17 @@ public class MyWebSocket implements CommonValue {
         String toid = jsStr.get("account").toString();
         String result = jsStr.get("result").toString();
         String id = jsStr.get("id").toString();
-        if(result.equals("agree")) {
+        if (result.equals("agree")) {
 
             setOperations.add(this.id, id);
             setOperations.add(id, this.id);
 
             Set<String> friends = setOperations.members(toid);
-            Map<String,Object> friendsData = new HashMap<String,Object>();
+            Map<String, Object> friendsData = new HashMap<String, Object>();
             friendsData.put("type", "friendsinfo");
             friendsData.put("Data", friends);
 
-            Map<String,String> send = new HashMap<String,String>();
+            Map<String, String> send = new HashMap<String, String>();
             send.put("type", "agree");
             send.put("friendid", id);
 
@@ -259,10 +268,10 @@ public class MyWebSocket implements CommonValue {
     private void sendAddFriendRequest(JSONObject jsStr) throws IOException {
         String account = jsStr.get("account").toString();
         String id = jsStr.get("id").toString();
-        Map<String,Object> data = new HashMap<String,Object>();
+        Map<String, Object> data = new HashMap<String, Object>();
         User user = userServiceImpl.get(id);
         data.put("type", "friendRequest");
-        data.put("user",user);
+        data.put("user", user);
         read.publish(account, JSON.toJSONString(data));
     }
 
@@ -273,29 +282,32 @@ public class MyWebSocket implements CommonValue {
          */
 //        String toid = jsStr.get("otherId").toString();
 
+        sendMessage.sendExchangeMsg(null, id, jsStr);
+
         read.publish(this.id, jsStr);
     }
 
 
     /**
      * 发生错误时调用
-     @OnError
+     *
+     * @OnError
      */
-     public void onError(Session session, Throwable error) {
-     System.out.println("发生错误");
-     error.printStackTrace();
-     }
+    public void onError(Session session, Throwable error) {
+        System.out.println("发生错误");
+        error.printStackTrace();
+    }
 
 
-     public void sendMessage(String message) throws IOException {
-     this.session.getBasicRemote().sendText(message);
+    public void sendMessage(String message) throws IOException {
+        this.session.getBasicRemote().sendText(message);
 //     this.session.getAsyncRemote().sendText(message);
-     }
+    }
 
 
-     /**
-      * 群发自定义消息
-      * */
+    /**
+     * 群发自定义消息
+     */
     public static void sendAllInfo(String message) throws IOException {
         for (MyWebSocket item : webSocketSet) {
             try {
@@ -334,4 +346,13 @@ public class MyWebSocket implements CommonValue {
         MyWebSocket.webSocketSet = webSocketSet;
     }
 
+    @Override
+    public void onMessage(Message message, Channel channel) throws Exception {
+
+        byte[] body = message.getBody();
+        System.out.println(new String(body));
+
+        sendMessage(new String(body));
+
+    }
 }

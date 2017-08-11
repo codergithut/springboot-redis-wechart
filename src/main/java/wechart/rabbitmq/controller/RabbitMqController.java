@@ -24,7 +24,7 @@ public class RabbitMqController {
     ReceivedMessage receivedMessage;
 
 
-    @RequestMapping(value = "/wechart/rabbitmq")
+    @RequestMapping(value = "/rabbitmq")
     @ResponseBody
     public void testRabbitMq() {
         RecMessageListener recMessageListener = new RecMessageListener();

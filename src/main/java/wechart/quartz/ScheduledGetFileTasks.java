@@ -4,20 +4,10 @@ package wechart.quartz;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Configurable;
 import org.springframework.beans.factory.annotation.Qualifier;
-import org.springframework.data.mongodb.core.IndexOperations;
 import org.springframework.data.mongodb.core.MongoTemplate;
-import org.springframework.data.mongodb.core.index.Index;
-import org.springframework.data.mongodb.core.query.Order;
 import org.springframework.stereotype.Component;
 import redis.clients.jedis.Jedis;
 import wechart.config.CommonValue;
-import wechart.model.TalkHistoryContent;
-import wechart.socket.JedisPubSubListener;
-import wechart.util.BeanUtils;
-
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Set;
 
 
 /**
