@@ -22,13 +22,23 @@ public class ReceivedMessage {
     @Autowired
     ConnectionFactory connectionFactory;
 
+    SimpleMessageListenerContainer container;
+
     public SimpleMessageListenerContainer messageContainer(Queue[] queueList, ChannelAwareMessageListener listener) {
 
-        SimpleMessageListenerContainer container = new SimpleMessageListenerContainer(connectionFactory);
+        container = new SimpleMessageListenerContainer(connectionFactory);
         container.setQueues(queueList);
         container.setMessageListener(listener);
+
 
         return container;
     }
 
+    public SimpleMessageListenerContainer getContainer() {
+        return container;
+    }
+
+    public void setContainer(SimpleMessageListenerContainer container) {
+        this.container = container;
+    }
 }

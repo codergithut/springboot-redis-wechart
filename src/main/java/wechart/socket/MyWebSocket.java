@@ -112,7 +112,6 @@ public class MyWebSocket implements CommonValue, ChannelAwareMessageListener {
         addOnlineCount();
         if (id != null) {
             this.id = id;
-
             for(MyWebSocket socket : webSocketSet) {
                 if(socket.getId().equals(id)) {
                     socket.getWebSockets().add(this);
@@ -179,6 +178,7 @@ public class MyWebSocket implements CommonValue, ChannelAwareMessageListener {
     public void onClose() {
         webSocketSet.remove(this);  //从set中删除
         subOnlineCount();           //在线数减1
+        receivedMessage.getContainer().stop();
         System.out.println("有一连接关闭！当前在线人数为" + getOnlineCount());
     }
 
@@ -381,6 +381,16 @@ public class MyWebSocket implements CommonValue, ChannelAwareMessageListener {
         sendMessage(new String(body));
 
         System.out.println(channel.toString());
+
+        boolean flag = true;
+
+        while(flag) {
+
+            Thread.sleep(1000);
+
+            System.out.println("this is test");
+
+        }
 
         /**
          * 有其它客户端需要同时通知
