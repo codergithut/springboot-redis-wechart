@@ -71,6 +71,8 @@ public class MyWebSocket implements CommonValue, ChannelAwareMessageListener {
 
     ReceivedMessage receivedMessage;
 
+    String lastSendMessage;
+
     private void init() {
 
         setOperations = BeanUtils.getBean("setOperations");
@@ -122,6 +124,7 @@ public class MyWebSocket implements CommonValue, ChannelAwareMessageListener {
 
             System.out.println("有新连接加入！当前在线人数为" + getOnlineCount());
             try {
+
                 Set<String> friends = setOperations.members(this.id);
                 Map<String, Object> friendsData = new HashMap<String, Object>();
                 friendsData.put("type", "friendsinfo");
@@ -303,12 +306,20 @@ public class MyWebSocket implements CommonValue, ChannelAwareMessageListener {
 
 
     public void sendMessage(String message) throws IOException {
+        /**
+         * 如果该消息已发送过无需再发
+         */
+        if(message.equals(lastSendMessage)) {
+            return ;
+        }
 
         System.out.println("会话对象" + this.session.getBasicRemote().toString());
 
         System.out.println("会话对象HashCode" + this.session.toString());
 
         this.session.getBasicRemote().sendText(message);
+
+        lastSendMessage = message;
 //     this.session.getAsyncRemote().sendText(message);
     }
 
@@ -384,7 +395,21 @@ public class MyWebSocket implements CommonValue, ChannelAwareMessageListener {
 
         }
 
+        /**
+         * 如果消息正常发送没啥问题如果在消息未能全部成功消费返回到队列中让其他客户端消费（消息部分消费）
+         */
+        basicAck(message, channel);
+    }
 
-
+    /**
+     * 将处理结果发回到客户端供客户端解析处理
+     * 如果异常需要记录异常的编号
+     */
+    private void basicAck(Message message, Channel channel) {
+        try {
+            channel.basicAck(message.getMessageProperties().getDeliveryTag(), true); //确认消息成功消费
+        } catch (IOException e) {
+            logger.error("---------basicAck.IOException in!---------------");
+        }
     }
 }

@@ -32,5 +32,6 @@ public class ServerApplication extends SpringBootServletInitializer implements C
     public void run(String... strings) throws Exception {
 
         System.out.println("初始化。。。。。。。。。。。。");
+
     }
 }
