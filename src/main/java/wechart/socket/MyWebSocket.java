@@ -3,6 +3,8 @@ package wechart.socket;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
 import com.rabbitmq.client.Channel;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.amqp.core.Message;
 import org.springframework.amqp.core.Queue;
 import org.springframework.amqp.rabbit.core.ChannelAwareMessageListener;
@@ -50,6 +52,8 @@ public class MyWebSocket implements CommonValue, ChannelAwareMessageListener {
      */
     private CopyOnWriteArrayList<MyWebSocket> webSockets = new CopyOnWriteArrayList<MyWebSocket>();
 
+    private Logger logger =  LoggerFactory.getLogger(this.getClass());
+
 
 
     //与某个客户端的连接会话，需要通过它来给客户端发送数据
@@ -94,6 +98,8 @@ public class MyWebSocket implements CommonValue, ChannelAwareMessageListener {
      */
     @OnOpen
     public void onOpen(Session session) throws Exception {
+
+        logger.info("有用户上线了");
         init();
         this.session = session;
         String token = session.getRequestParameterMap().get(TOKEN).toString();

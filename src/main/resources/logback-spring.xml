@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration>
+    <include resource="org/springframework/boot/logging/logback/base.xml" />
+
+    <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder>
+            <pattern>%d %p (%file:%line\)- %m%n</pattern>
+            <charset>GBK</charset>
+        </encoder>
+    </appender>
+
+    <appender name="baselog"
+              class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <File><File>../logs/wechart.log</File></File>
+        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+            <fileNamePattern>log/base.log.%d.%i</fileNamePattern>
+            <timeBasedFileNamingAndTriggeringPolicy  class="ch.qos.logback.core.rolling.SizeAndTimeBasedFNATP">
+                <!-- or whenever the file size reaches 64 MB -->
+                <maxFileSize>64 MB</maxFileSize>
+            </timeBasedFileNamingAndTriggeringPolicy>
+        </rollingPolicy>
+        <encoder>
+            <pattern>
+                %d %p (%file:%line\)- %m%n
+            </pattern>
+            <charset>UTF-8</charset> <!-- 此处设置字符集 -->
+        </encoder>
+    </appender>
+
+
+    <root level="info">
+        <appender-ref ref="STDOUT" />
+    </root>
+
+    <logger name="wechart" level="DEBUG,INFO">
+        <appender-ref ref="baselog" />
+    </logger>
+
+    <logger name="org.springframework" level="off"/>
+
+</configuration>
