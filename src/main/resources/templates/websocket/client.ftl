@@ -16,9 +16,9 @@ Welcome<br/>
 
     //判断当前浏览器是否支持WebSocket
     if('WebSocket' in window){
-        websocket = new WebSocket("" +
-                "" +
-                "");
+	
+	//
+        websocket = new WebSocket("ws://192.168.50.220:8080/websocket?token=f6029ee3c9724ec19394675660847153");
     }
     else{
         alert('Not support websocket')
