@@ -2,14 +2,12 @@ package wechart.controller;
 
 import net.sourceforge.pinyin4j.format.exception.BadHanyuPinyinOutputFormatCombination;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.data.redis.core.HashOperations;
 import org.springframework.data.redis.core.SetOperations;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.RestController;
-import redis.clients.jedis.Jedis;
 import wechart.config.CommonValue;
 import wechart.model.User;
 import wechart.service.impl.UserServiceImpl;
@@ -38,10 +36,6 @@ public class UserControllerTest implements CommonValue{
     SetOperations setOperations;
 
     @Autowired
-    @Qualifier(JEDIS)
-    Jedis write;
-
-    @Autowired
     private UserServiceImpl service;
 
     //注册添加用户信息
@@ -50,7 +44,7 @@ public class UserControllerTest implements CommonValue{
     public Object registUserTest() throws BadHanyuPinyinOutputFormatCombination {
         User m = new User();
         String userId = getNumberAsId(2);
-        while(write.sismember(USERID, userId)) {
+        while(setOperations.isMember(USERID, userId)) {
             userId = getNumberAsId(10);
         }
         setOperations.add(USERID, userId);

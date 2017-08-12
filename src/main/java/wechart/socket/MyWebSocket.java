@@ -11,7 +11,6 @@ import org.springframework.data.redis.core.SetOperations;
 import org.springframework.stereotype.Component;
 import wechart.config.CommonValue;
 import wechart.model.User;
-import wechart.model.WebSocketMessage;
 import wechart.rabbitmq.service.receive.ReceivedMessage;
 import wechart.rabbitmq.service.send.SendMessage;
 import wechart.service.impl.UserServiceImpl;
@@ -27,6 +26,7 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.CopyOnWriteArraySet;
 
 
@@ -45,6 +45,13 @@ public class MyWebSocket implements CommonValue, ChannelAwareMessageListener {
     //concurrent包的线程安全Set，用来存放每个客户端对应的MyWebSocket对象。
     private static CopyOnWriteArraySet<MyWebSocket> webSocketSet = new CopyOnWriteArraySet<MyWebSocket>();
 
+    /**
+     * 为了实现同一个用户不同客户端消息收发
+     */
+    private CopyOnWriteArrayList<MyWebSocket> webSockets = new CopyOnWriteArrayList<MyWebSocket>();
+
+
+
     //与某个客户端的连接会话，需要通过它来给客户端发送数据
     private Session session;
 
@@ -61,6 +68,7 @@ public class MyWebSocket implements CommonValue, ChannelAwareMessageListener {
     ReceivedMessage receivedMessage;
 
     private void init() {
+
         setOperations = BeanUtils.getBean("setOperations");
 
         hashOperations = BeanUtils.getBean("hashOperations");
@@ -72,6 +80,14 @@ public class MyWebSocket implements CommonValue, ChannelAwareMessageListener {
         sendMessage = BeanUtils.getBean("sendMessage");
     }
 
+
+    public  CopyOnWriteArrayList<MyWebSocket> getWebSockets() {
+        return webSockets;
+    }
+
+    public  void setWebSockets(CopyOnWriteArrayList<MyWebSocket> webSockets) {
+        this.webSockets = webSockets;
+    }
 
     /**
      * 连接建立成功调用的方法
@@ -88,7 +104,16 @@ public class MyWebSocket implements CommonValue, ChannelAwareMessageListener {
         addOnlineCount();
         if (id != null) {
             this.id = id;
+
+            for(MyWebSocket socket : webSocketSet) {
+                if(socket.getId().equals(id)) {
+                    socket.getWebSockets().add(this);
+                    this.getWebSockets().add(socket);
+                }
+            }
+
             webSocketSet.add(this);
+
             System.out.println("有新连接加入！当前在线人数为" + getOnlineCount());
             try {
                 Set<String> friends = setOperations.members(this.id);
@@ -157,14 +182,16 @@ public class MyWebSocket implements CommonValue, ChannelAwareMessageListener {
     public void onMessage(String recMessage, Session session) throws IOException {
         //todo message需要给我特定的说明比如 添加好友addfriend@+消息体 聊天就是talk@+消息体 群聊天就是allTalk@+消息体  等等
 
-        WebSocketMessage message = JSON.parseObject(recMessage, WebSocketMessage.class);
+//        WebSocketMessage message = JSON.parseObject(recMessage, WebSocketMessage.class);
+//
+//        saveHistoryContent(recMessage, message.getReceivedId());
 
-        saveHistoryContent(recMessage, message.getReceivedId());
 
+//        System.out.println("asdfasdfasdfasdf" + recMessage);
+//
+//        sendUserInfo(recMessage, message.getReceivedId());
 
-        System.out.println("asdfasdfasdfasdf" + recMessage);
-
-        sendUserInfo(recMessage, message.getReceivedId());
+        sendUserInfo(recMessage, id);
 
 //        WebSocketMessage message = JSON.parseObject(recMessage, WebSocketMessage.class);
 //
@@ -270,6 +297,11 @@ public class MyWebSocket implements CommonValue, ChannelAwareMessageListener {
 
 
     public void sendMessage(String message) throws IOException {
+
+        System.out.println("会话对象" + this.session.getBasicRemote().toString());
+
+        System.out.println("会话对象HashCode" + this.session.toString());
+
         this.session.getBasicRemote().sendText(message);
 //     this.session.getAsyncRemote().sendText(message);
     }
@@ -316,13 +348,37 @@ public class MyWebSocket implements CommonValue, ChannelAwareMessageListener {
         MyWebSocket.webSocketSet = webSocketSet;
     }
 
+    /**
+     *
+     * @param message 接受到的消息内容
+     * @param channel
+     * @throws Exception
+     * 一旦接受到消息会发给已经登录的同一个用户的客户端
+     *
+     */
     @Override
     public void onMessage(Message message, Channel channel) throws Exception {
 
         byte[] body = message.getBody();
-        System.out.println(new String(body));
 
         sendMessage(new String(body));
+
+        System.out.println(channel.toString());
+
+        /**
+         * 有其它客户端需要同时通知
+         */
+        if(!webSockets.isEmpty()) {
+
+            for(MyWebSocket socket : webSockets) {
+
+                socket.sendMessage(new String(body));
+
+            }
+
+        }
+
+
 
     }
 }
