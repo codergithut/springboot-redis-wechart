@@ -7,7 +7,7 @@ import org.springframework.amqp.rabbit.core.ChannelAwareMessageListener;
 /**
  * @author <a href="mailto:Administrator@gtmap.cn">Administrator</a>
  * @version 1.0, 2017/8/10
- * @description
+ * @description 消息接受监听器
  */
 public class RecMessageListener implements ChannelAwareMessageListener {
     @Override

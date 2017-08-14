@@ -9,12 +9,28 @@ import java.io.Serializable;
  */
 public class User implements Serializable {
 
+    /**
+     * @author <a href="mailto:tianjian@gtmap.cn">tianjian</a>
+     * @description 存放redis的消息ID
+     */
     private String redisKey;//redis中的key
 
+    /**
+     * @author <a href="mailto:tianjian@gtmap.cn">tianjian</a>
+     * @description 用户名
+     */
     private String username;
 
+    /**
+     * @author <a href="mailto:tianjian@gtmap.cn">tianjian</a>
+     * @description 用户密码
+     */
     private String password;
 
+    /**
+     * @author <a href="mailto:tianjian@gtmap.cn">tianjian</a>
+     * @description 用户名称拼音
+      */
     private String pinying;
 
     public String getPinying() {

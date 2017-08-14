@@ -11,9 +11,9 @@ import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Service;
 
 /**
- * @author <a href="mailto:Administrator@gtmap.cn">Administrator</a>
+ * @author <a href="mailto:tianjian@gtmap.cn">tianjian</a>
  * @version 1.0, 2017/8/10
- * @description
+ * @description 消息接受监听
  */
 @Service
 @Scope(ConfigurableBeanFactory.SCOPE_PROTOTYPE)

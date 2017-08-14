@@ -10,7 +10,7 @@ import wechart.rabbitmq.service.receive.ReceivedMessage;
 import wechart.rabbitmq.service.send.SendMessage;
 
 /**
- * @author <a href="mailto:Administrator@gtmap.cn">Administrator</a>
+ * @author <a href="mailto:tianjian@gtmap.cn">tianjian</a>
  * @version 1.0, 2017/8/10
  * @description
  */

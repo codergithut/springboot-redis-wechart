@@ -6,7 +6,7 @@ import org.springframework.beans.factory.annotation.Configurable;
 import org.springframework.context.annotation.Bean;
 
 /**
- * @author <a href="mailto:Administrator@gtmap.cn">Administrator</a>
+ * @author <a href="mailto:tianjian@gtmap.cn">tianjian</a>
  * @version 1.0, 2017/8/10
  * @description
  */
