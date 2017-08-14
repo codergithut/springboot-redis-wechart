@@ -36,7 +36,7 @@ import java.util.concurrent.CopyOnWriteArraySet;
  */
 @ServerEndpoint(value = "/websocket")
 @Component
-public class MyWebSocket implements CommonValue, ChannelAwareMessageListener {
+public class MyWebSocket implements ChannelAwareMessageListener {
 
     /**
      * @author <a href="mailto:tianjian@gtmap.cn">tianjian</a>
@@ -157,9 +157,9 @@ public class MyWebSocket implements CommonValue, ChannelAwareMessageListener {
         /**
          * 获取用户token信息来验证用户身份，获取用户的ID
          */
-        String token = session.getRequestParameterMap().get(TOKEN).toString();
+        String token = session.getRequestParameterMap().get(CommonValue.TOKEN).toString();
         token = token.substring(1, token.length() - 1);
-        String id = (String) hashOperations.get(LOGININFO, token);
+        String id = (String) hashOperations.get(CommonValue.LOGININFO, token);
         addOnlineCount();
 
         /**
@@ -321,9 +321,9 @@ public class MyWebSocket implements CommonValue, ChannelAwareMessageListener {
          */
         String talkKey = StringSort.getKeyBySort(new String[]{this.id, receivedId});
 
-        if (!setOperations.isMember(HISTORYCONTENT, talkKey)) {
+        if (!setOperations.isMember(CommonValue.HISTORYCONTENT, talkKey)) {
 
-            setOperations.add(HISTORYCONTENT, talkKey);
+            setOperations.add(CommonValue.HISTORYCONTENT, talkKey);
         }
 
         setOperations.add(talkKey, message);

@@ -11,9 +11,9 @@ import wechart.service.IHsahRedisService;
  * @description
  */
 @Service(value = "userServiceImpl")
-public class UserServiceImpl extends IHsahRedisService<User> implements CommonValue{
+public class UserServiceImpl extends IHsahRedisService<User> {
 
-    private static final String REDIS_KEY = USRINFO;
+    private static final String REDIS_KEY = CommonValue.USRINFO;
 
     @Override
     protected String getRedisKey() {

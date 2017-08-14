@@ -21,7 +21,7 @@ import java.util.concurrent.ThreadPoolExecutor;
  * @description
  */
 @Configuration
-public class RedisConfig implements CommonValue{
+public class RedisConfig {
 
     @Value("${custom.redis.host}")
     String host;

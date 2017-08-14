@@ -13,7 +13,7 @@ import wechart.config.RedisConfig;
  */
 //@Configuration
 //@Import(RedisConfig.class)
-public class MyWebAppConfigurer extends WebMvcConfigurerAdapter implements CommonValue {
+public class MyWebAppConfigurer extends WebMvcConfigurerAdapter {
 
     @Autowired
     RedisConfig redisConfig;
@@ -23,7 +23,7 @@ public class MyWebAppConfigurer extends WebMvcConfigurerAdapter implements Commo
 
     @Override
     public void addInterceptors(InterceptorRegistry registry) {
-        registry.addInterceptor(myInterceptor).addPathPatterns("/**").excludePathPatterns("//" + PRFIX_LOGIN,"//" + PRFIX_REGISTER,"/save");
+        registry.addInterceptor(myInterceptor).addPathPatterns("/**").excludePathPatterns("//" + CommonValue.PRFIX_LOGIN,"//" + CommonValue.PRFIX_REGISTER,"/save");
         super.addInterceptors(registry);
     }
 

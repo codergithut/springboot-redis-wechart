@@ -24,7 +24,7 @@ import java.util.Set;
  */
 @Component
 @Configurable
-public class ScheduledGetFileTasks implements CommonValue{
+public class ScheduledGetFileTasks {
 
     @Autowired
     MongoTemplate mongoTemplate;
@@ -42,7 +42,7 @@ public class ScheduledGetFileTasks implements CommonValue{
 
         io.ensureIndex(index);
 
-        Set<String> keys = setOperations.members(HISTORYCONTENT);
+        Set<String> keys = setOperations.members(CommonValue.HISTORYCONTENT);
 
         for(String key : keys) {
 

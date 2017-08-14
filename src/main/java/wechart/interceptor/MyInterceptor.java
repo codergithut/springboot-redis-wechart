@@ -16,7 +16,7 @@ import javax.servlet.http.HttpServletResponse;
  * @version 1.0, 2017/8/4
  * @description
  */
-public class MyInterceptor implements HandlerInterceptor, CommonValue {
+public class MyInterceptor implements HandlerInterceptor {
 
     public void setHashOperations(HashOperations hashOperations) {
 
@@ -39,11 +39,11 @@ public class MyInterceptor implements HandlerInterceptor, CommonValue {
             try {
                 for (Cookie cookie : cookies) {
 
-                    if (cookie.getName().equals(COOK_NAME)) {
+                    if (cookie.getName().equals(CommonValue.COOK_NAME)) {
 
                         if(cookie!=null && cookie.getValue()!=null) {
 
-                            flag = hashOperations.hasKey(LOGININFO, cookie.getValue());
+                            flag = hashOperations.hasKey(CommonValue.LOGININFO, cookie.getValue());
 
                         }
                     }
@@ -51,7 +51,7 @@ public class MyInterceptor implements HandlerInterceptor, CommonValue {
 
                 if(!flag) {
 
-                    httpServletResponse.sendRedirect(LOGIN_URL);
+                    httpServletResponse.sendRedirect(CommonValue.LOGIN_URL);
 
                     return false;
 

@@ -27,7 +27,7 @@ import static wechart.util.RandomUtils.getNumberAsId;
  */
 @RestController
 @RequestMapping(value = "/test")
-public class UserControllerTest implements CommonValue{
+public class UserControllerTest {
 
     @Autowired
     HashOperations hashOperations;
@@ -44,17 +44,17 @@ public class UserControllerTest implements CommonValue{
     public Object registUserTest() throws BadHanyuPinyinOutputFormatCombination {
         User m = new User();
         String userId = getNumberAsId(2);
-        while(setOperations.isMember(USERID, userId)) {
+        while(setOperations.isMember(CommonValue.USERID, userId)) {
             userId = getNumberAsId(10);
         }
-        setOperations.add(USERID, userId);
+        setOperations.add(CommonValue.USERID, userId);
         m.setRedisKey(userId);
         m.setPassword("root1");
         m.setUsername("root1");
         m.setPinying(GetPingyin.getPingYin(m.getUsername()));
         m.setBinding("1467237662@qq.com");
         service.put(m.getRedisKey(), m, -1);
-        hashOperations.put(BINDINGINFO, "1467237662@qq.com", m.getRedisKey());
+        hashOperations.put(CommonValue.BINDINGINFO, "1467237662@qq.com", m.getRedisKey());
         return m;
     }
 
@@ -67,8 +67,8 @@ public class UserControllerTest implements CommonValue{
         User m = service.get("15");
 
         String token = UUIDTool.getUUID();
-        hashOperations.put(LOGININFO, token, m.getRedisKey());
-        Cookie cookie = new Cookie(COOK_NAME, token);
+        hashOperations.put(CommonValue.LOGININFO, token, m.getRedisKey());
+        Cookie cookie = new Cookie(CommonValue.COOK_NAME, token);
         response.addCookie(cookie);
         return token;
     }
@@ -86,7 +86,7 @@ public class UserControllerTest implements CommonValue{
         }
 
         String token = UUIDTool.getUUID();
-        Cookie cookie = new Cookie(COOK_NAME, token);
+        Cookie cookie = new Cookie(CommonValue.COOK_NAME, token);
         response.addCookie(cookie);
         return token;
     }
