@@ -50,8 +50,8 @@ public class UserControllerTest {
         setOperations.add(CommonValue.USERID, userId);
         m.setRedisKey(userId);
         m.setPassword("root1");
-        m.setUsername("root1");
-        m.setPinying(GetPingyin.getPingYin(m.getUsername()));
+        m.setName("root1");
+        m.setPinying(GetPingyin.getPingYin(m.getName()));
         m.setBinding("1467237662@qq.com");
         service.put(m.getRedisKey(), m, -1);
         hashOperations.put(CommonValue.BINDINGINFO, "1467237662@qq.com", m.getRedisKey());

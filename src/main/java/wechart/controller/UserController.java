@@ -65,8 +65,8 @@ public class UserController {
         setOperations.add(CommonValue.USERID, userId);
         m.setRedisKey(userId);
         m.setPassword(password);
-        m.setUsername(username);
-        m.setPinying(GetPingyin.getPingYin(m.getUsername()));
+        m.setName(username);
+        m.setPinying(GetPingyin.getPingYin(m.getName()));
         m.setBinding(email);
         hashOperations.put(CommonValue.USRINFO, m.getRedisKey(), m);
         hashOperations.put(CommonValue.BINDINGINFO, email, m.getRedisKey());
@@ -144,7 +144,7 @@ public class UserController {
         simpleMailMessage.setFrom(username);
         simpleMailMessage.setTo("1731857742@qq.com");//接收邮件的邮箱
         simpleMailMessage.setSubject("微聊密码重置");
-        simpleMailMessage.setText("尊敬的用户你好，你现在正在尝试重置用户名为:" + m.getUsername()
+        simpleMailMessage.setText("尊敬的用户你好，你现在正在尝试重置用户名为:" + m.getName()
                 + "的密码！" + "验证码如下: " + code);
 
         hashOperations.put(CommonValue.RESETUSERINFO, code, m.getRedisKey());
