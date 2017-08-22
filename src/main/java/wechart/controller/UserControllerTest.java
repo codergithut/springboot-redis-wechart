@@ -21,7 +21,7 @@ import java.util.List;
 import static wechart.util.RandomUtils.getNumberAsId;
 
 /**
- * @author <a href="mailto:Administrator@gtmap.cn">Administrator</a>
+ * @author <a href="mailto:tianjian@gtmap.cn">tianjian</a>
  * @version 1.0, 2017/8/4
  * @description
  */
@@ -95,6 +95,7 @@ public class UserControllerTest {
     @RequestMapping(value = "/getToken", method = RequestMethod.GET)
     @ResponseBody
     public Object tokenCheck(HttpServletResponse response) {
+
         boolean flag = false;
         User user = new User();
         user.setBinding("sfasdfasdf");

@@ -1,7 +1,6 @@
 package wechart.socket;
 
 import com.alibaba.fastjson.JSON;
-import com.alibaba.fastjson.JSONObject;
 import com.rabbitmq.client.Channel;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -13,6 +12,8 @@ import org.springframework.data.redis.core.SetOperations;
 import org.springframework.stereotype.Component;
 import wechart.config.CommonValue;
 import wechart.model.User;
+import wechart.model.WebSocketMessage;
+import wechart.neo4j.repository.UserRepository;
 import wechart.rabbitmq.service.receive.ReceivedMessage;
 import wechart.rabbitmq.service.send.SendMessage;
 import wechart.service.impl.UserServiceImpl;
@@ -22,9 +23,7 @@ import wechart.util.StringSort;
 import javax.websocket.*;
 import javax.websocket.server.ServerEndpoint;
 import java.io.IOException;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.CopyOnWriteArraySet;
 
@@ -113,6 +112,9 @@ public class MyWebSocket implements ChannelAwareMessageListener {
      */
     String lastSendMessage;
 
+
+    UserRepository userRepository;
+
     /**
      * @author <a href="mailto:tianjian@gtmap.cn">tianjian</a>
      * @param
@@ -130,6 +132,8 @@ public class MyWebSocket implements ChannelAwareMessageListener {
         receivedMessage = BeanUtils.getBean("receivedMessage");
 
         sendMessage = BeanUtils.getBean("sendMessage");
+
+        userRepository = BeanUtils.getBean("userRepository");
     }
 
 
@@ -146,9 +150,14 @@ public class MyWebSocket implements ChannelAwareMessageListener {
      * @param session 客户端连接的会话
      * @return void
      * @description 用户尝试链接到服务器初始化方法
+     *
+     *
+     *
      */
     @OnOpen
     public void onOpen(Session session) throws Exception {
+
+        Set<User> friends = new HashSet<User>();
 
         logger.info("有用户上线了");
         init();
@@ -156,6 +165,7 @@ public class MyWebSocket implements ChannelAwareMessageListener {
 
         /**
          * 获取用户token信息来验证用户身份，获取用户的ID
+         *
          */
         String token = session.getRequestParameterMap().get(CommonValue.TOKEN).toString();
         token = token.substring(1, token.length() - 1);
@@ -190,12 +200,12 @@ public class MyWebSocket implements ChannelAwareMessageListener {
             try {
 
                 /**
-                 * 初始化好友信息
+                 * 初始化好友聊天信息从已接受消息中恢复
                  */
-                Set<String> friends = setOperations.members(this.id);
+                Set<String> friendsTalk = setOperations.members(this.id);
                 Map<String, Object> friendsData = new HashMap<String, Object>();
                 friendsData.put("type", "friendsinfo");
-                friendsData.put("Data", friends);
+                friendsData.put("Data", friendsTalk);
 
                 /**
                  * 初始化用户信息
@@ -205,10 +215,18 @@ public class MyWebSocket implements ChannelAwareMessageListener {
                 userData.put("type", "userinfo");
                 userData.put("Data", user);
 
+                List<User> users = userRepository.findByRedisKey(this.id);
+
+                if(users.size() == 1) {
+                    friends = users.get(0).getFriends();
+                }
+
                 /**
                  * 返回好友信息
                  */
-                sendMessage(JSON.toJSONString(friendsData));
+                if(friends.size() > 0) {
+                    sendMessage(JSON.toJSONString(friends));
+                }
 
                 /**
                  * 返回用户信息
@@ -266,42 +284,28 @@ public class MyWebSocket implements ChannelAwareMessageListener {
     public void onMessage(String recMessage, Session session) throws IOException {
         //todo message需要给我特定的说明比如 添加好友addfriend@+消息体 聊天就是talk@+消息体 群聊天就是allTalk@+消息体  等等
 
-//        WebSocketMessage message = JSON.parseObject(recMessage, WebSocketMessage.class);
-//
-//        saveHistoryContent(recMessage, message.getReceivedId());
+        WebSocketMessage message = JSON.parseObject(recMessage, WebSocketMessage.class);
+
+        saveHistoryContent(recMessage, message.getReceivedId());
+
+        String type = message.getType();
+
+        if("TALK".equals(type)) {
+            sendUserInfo(message);
+        }
 
 
-//        System.out.println("asdfasdfasdfasdf" + recMessage);
-//
-//        sendUserInfo(recMessage, message.getReceivedId());
+        if("AddFriend".equals(type)) {
+            sendAddFriendRequest(message);
+        }
 
-        sendUserInfo(recMessage, id);
+        if("AgreeFriend".equals(type)) {
+            sendResultFrendRequest(message);
+        }
 
-//        WebSocketMessage message = JSON.parseObject(recMessage, WebSocketMessage.class);
-//
-//        if(message.getType().equals("TALK")) {
-//            sendUserInfo(message);
-//        }
-//
-//
-//        JSONObject jsStr = JSONObject.parseObject(recMessage);
-//        sendUserInfo(jsStr);
-//        String type = jsStr.get("type").toString();
-//        if(type.equals("talk")) {
-//            sendUserInfo(jsStr);
-//        }
-//
-//        if(type.equals("addFriend")) {
-//            sendAddFriendRequest(jsStr);
-//        }
-//
-//        if(type.equals("agreeFriend")) {
-//            sendResultFrendRequest(jsStr);
-//        }
-//
-//        if(type.equals("recFriend")) {
-//
-//        }
+        if("RecFriend".equals(type)) {
+
+        }
 
     }
 
@@ -331,14 +335,27 @@ public class MyWebSocket implements ChannelAwareMessageListener {
     }
 
 
-    private void sendResultFrendRequest(JSONObject jsStr) throws IOException {
-        String toid = jsStr.get("account").toString();
-        String result = jsStr.get("result").toString();
-        String id = jsStr.get("id").toString();
+    private void sendResultFrendRequest(WebSocketMessage message) throws IOException {
+        String toid = message.getReceivedId();
+        String result = message.getContent();
+        String id = message.getSendId();
+
+        /**
+         * 好友请求通过就互相添加好友信息
+         */
         if (result.equals("agree")) {
 
-            setOperations.add(this.id, id);
-            setOperations.add(id, this.id);
+            List<User> friend = userRepository.findByRedisKey(toid);
+
+            List<User> user = userRepository.findByRedisKey(id);
+
+            if(friend.size()==1 && user.size()==1) {
+
+                friend.get(0).addFriends(user.get(0));
+
+                user.get(0).addFriends(friend.get(0));
+
+            }
 
             Set<String> friends = setOperations.members(toid);
             Map<String, Object> friendsData = new HashMap<String, Object>();
@@ -351,9 +368,9 @@ public class MyWebSocket implements ChannelAwareMessageListener {
         }
     }
 
-    private void sendAddFriendRequest(JSONObject jsStr) throws IOException {
-        String account = jsStr.get("account").toString();
-        String id = jsStr.get("id").toString();
+    private void sendAddFriendRequest(WebSocketMessage message) throws IOException {
+        String account = message.getReceivedId();
+        String id = message.getSendId();
         Map<String, Object> data = new HashMap<String, Object>();
         User user = userServiceImpl.get(id);
         data.put("type", "friendRequest");
@@ -364,14 +381,13 @@ public class MyWebSocket implements ChannelAwareMessageListener {
 
     /**
      * @author <a href="mailto:tianjian@gtmap.cn">tianjian</a>
-     * @param jsStr 发送消息的报文
-     * @param receiveId 对端的ID（可以是好友，也可能是某个群） 需要使用exchange属性控制
+     * @param message 发送消息的报文
      * @return void
      * @description 将消息发送到特定的队列中去
      */
-    public void sendUserInfo(String jsStr, String receiveId) throws IOException {
+    public void sendUserInfo(WebSocketMessage message) throws IOException {
 
-        sendMessage.sendExchangeMsg(null, receiveId, jsStr);
+        sendMessage.sendExchangeMsg(null, message.getReceivedId(), JSON.toJSONString(message));
 
     }
 
