@@ -29,7 +29,7 @@ public class MailTest {
         SimpleMailMessage simpleMailMessage = new SimpleMailMessage();
 
         simpleMailMessage.setFrom(username);
-        simpleMailMessage.setTo("1731857742@qq.com");//接收邮件的邮箱
+        simpleMailMessage.setTo("1468195034@qq.com");//接收邮件的邮箱
         simpleMailMessage.setSubject("测试");
         simpleMailMessage.setText("测试服务");
 
